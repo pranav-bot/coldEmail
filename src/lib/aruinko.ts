@@ -1,6 +1,7 @@
 //TODO: fix aurinko spelling error
 'use server'
 
+import axios from 'axios'
 import { auth } from "@clerk/nextjs/server";
 
 export const getAruinkoAuthUrl = async (
@@ -20,3 +21,49 @@ export const getAruinkoAuthUrl = async (
 
   return `https://api.aurinko.io/v1/auth/authorize?${params.toString()}`;
 };
+
+export const exchangeCodeForAccessToken = async (code: string) => {
+  try {
+    const response = await axios.post(`https://api.aurinko.io/v1/auth/token/${code}`, {}, {
+      auth: {
+        username: process.env.ARUINKO_CLIENT_ID!,
+        password: process.env.ARUINKO_CLIENT_SECRET!,
+      }
+    })
+
+    return response.data as {
+      accountId: string,
+      accessToken: string,
+      userId: string,
+      userSession: string,
+    }
+  } catch (error) {
+    if(axios.isAxiosError(error)){
+      console.error(error.response?.data)
+    }
+    console.error(error)
+  }
+}
+
+export const getAccountDetails = async (accessToken: string) => {
+  try {
+    const response = await axios.get(`https://api.aurinko.io/v1/account`, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      }
+    })
+
+    return response.data as {
+      email: string,
+      name: string,
+    }
+  } catch (error) {
+    if(axios.isAxiosError(error)){
+      console.error(error.response?.data)
+    }
+    else{
+      console.error(error)
+    }
+    console.error(error)
+  }
+}
