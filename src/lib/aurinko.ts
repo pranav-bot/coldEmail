@@ -4,17 +4,17 @@
 import axios from 'axios'
 import { auth } from "@clerk/nextjs/server";
 
-export const getAruinkoAuthUrl = async (
+export const getAurinkoAuthUrl = async (
   serviceType: "Google" | "Office365",
 ) => {
   const { userId } = await auth();
   if (!userId) throw new Error("Unauthorized");
   const params = new URLSearchParams({
-    clientId: process.env.ARUINKO_CLIENT_ID!,
+    clientId: process.env.AURINKO_CLIENT_ID!,
     serviceType: serviceType,
     scopes: 'Mail.Read Mail.ReadWrite Mail.Send Mail.Drafts Mail.All',
     response_type: 'code',
-    returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/aurinko/callback`,
+    returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/aruinko/callback`,
   });
 
   console.log(params.toString());
@@ -26,8 +26,8 @@ export const exchangeCodeForAccessToken = async (code: string) => {
   try {
     const response = await axios.post(`https://api.aurinko.io/v1/auth/token/${code}`, {}, {
       auth: {
-        username: process.env.ARUINKO_CLIENT_ID!,
-        password: process.env.ARUINKO_CLIENT_SECRET!,
+        username: process.env.AURINKO_CLIENT_ID!,
+        password: process.env.AURINKO_CLIENT_SECRET!,
       }
     })
 

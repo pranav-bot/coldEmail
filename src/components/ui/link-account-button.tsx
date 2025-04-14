@@ -1,12 +1,12 @@
 'use client'
 
 import { Button } from "@/components/ui/button"
-import { getAruinkoAuthUrl } from "@/lib/aruinko"
+import { getAurinkoAuthUrl } from "@/lib/aurinko"
 
 const LinkAccountButton = () => {
     return (
         <Button onClick={async () => {
-            const authUrl = await getAruinkoAuthUrl('Google')
+            const authUrl = await getAurinkoAuthUrl('Google')
             window.location.href = authUrl
         }}>
             Link Account

@@ -1,12 +1,12 @@
 // api/aurinko/callback/
 
-import { exchangeCodeForAccessToken, getAccountDetails } from "@/lib/aruinko"
+import { exchangeCodeForAccessToken, getAccountDetails } from "@/lib/aurinko"
 import { db } from "@/server/db"
 import { auth } from "@clerk/nextjs/server"
 import { NextRequest, NextResponse } from "next/server"
 
 export const GET = async (req: NextRequest) => {
-    const { userId } = await auth()
+    const { userId }= await auth()
     if (!userId) {
         return NextResponse.json('Unauthorized', { status: 401 })
     }
