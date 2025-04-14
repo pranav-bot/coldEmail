@@ -1,4 +1,4 @@
-//TODO: why use server is required?
+//TODO: fix aurinko spelling error
 'use server'
 
 import { auth } from "@clerk/nextjs/server";
