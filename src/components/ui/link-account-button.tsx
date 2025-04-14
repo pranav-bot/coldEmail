@@ -1,7 +1,7 @@
 'use client'
 
 import { Button } from "@/components/ui/button"
-import { getAruinkoAuthUrl } from "@/lib/aruinko"
+import { getAruinkoAuthUrl } from "@/lib/aurinko"
 
 const LinkAccountButton = () => {
     return (
