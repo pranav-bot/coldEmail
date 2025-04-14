@@ -14,7 +14,7 @@ export const getAruinkoAuthUrl = async (
     serviceType: serviceType,
     scopes: 'Mail.Read Mail.ReadWrite Mail.Send Mail.Drafts Mail.All',
     response_type: 'code',
-    returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/aruinko/callback`,
+    returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/aurinko/callback`,
   });
 
   console.log(params.toString());
