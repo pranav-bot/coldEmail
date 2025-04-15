@@ -14,7 +14,7 @@ export const getAurinkoAuthUrl = async (
     serviceType: serviceType,
     scopes: 'Mail.Read Mail.ReadWrite Mail.Send Mail.Drafts Mail.All',
     response_type: 'code',
-    returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/aruinko/callback`,
+    returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/aurinko/callback`,
   });
 
   console.log(params.toString());
@@ -45,17 +45,17 @@ export const exchangeCodeForAccessToken = async (code: string) => {
   }
 }
 
-export const getAccountDetails = async (accessToken: string) => {
+export const getAccountDetails = async (token: string) => {
   try {
     const response = await axios.get(`https://api.aurinko.io/v1/account`, {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
+        Authorization: `Bearer ${token}`,
       }
     })
 
     return response.data as {
-      email: string,
-      name: string,
+      emailAddress: string,
+      firstName: string,
     }
   } catch (error) {
     if(axios.isAxiosError(error)){
