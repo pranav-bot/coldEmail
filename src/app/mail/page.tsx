@@ -1,9 +1,5 @@
-import Mail from "./mail";
+import { MailClient } from './mail-client';
 
-const MailDashboard = () => {
-    return (
-        <Mail defaultLayout={[20, 32, 48]} defaultCollapsed={false} navCollaspedSize={4} />
-    )
+export default function MailDashboard() {
+    return <MailClient />;
 }
-
-export default MailDashboard;

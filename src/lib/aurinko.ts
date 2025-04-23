@@ -17,19 +17,16 @@ export const getAurinkoAuthUrl = async (
     returnUrl: `${process.env.NEXT_PUBLIC_APP_URL}/api/aurinko/callback`,
   });
 
-  console.log(params.toString());
-
   return `https://api.aurinko.io/v1/auth/authorize?${params.toString()}`;
 };
 
 export const exchangeCodeForAccessToken = async (code: string) => {
   try {
-    const response = await axios.post(`https://api.aurinko.io/v1/auth/token/${code}`, {}, {
-      auth: {
-        username: process.env.AURINKO_CLIENT_ID!,
-        password: process.env.AURINKO_CLIENT_SECRET!,
-      }
-    })
+    const response = await axios.post(`https://api.aurinko.io/v1/auth/token`, {
+      code,
+      clientId: process.env.AURINKO_CLIENT_ID!,
+      clientSecret: process.env.AURINKO_CLIENT_SECRET!,
+    });
 
     return response.data as {
       accountId: string,
@@ -39,9 +36,12 @@ export const exchangeCodeForAccessToken = async (code: string) => {
     }
   } catch (error) {
     if(axios.isAxiosError(error)){
-      console.error(error.response?.data)
+      const errorMessage = error.response?.data?.message ?? 'Unknown error';
+      console.error('Aurinko API Error:', error.response?.data);
+      throw new Error(`Failed to exchange code for token: ${errorMessage}`);
     }
-    console.error(error)
+    console.error('Unexpected error:', error);
+    throw error;
   }
 }
 
@@ -51,7 +51,7 @@ export const getAccountDetails = async (token: string) => {
       headers: {
         Authorization: `Bearer ${token}`,
       }
-    })
+    });
 
     return response.data as {
       emailAddress: string,
@@ -59,11 +59,11 @@ export const getAccountDetails = async (token: string) => {
     }
   } catch (error) {
     if(axios.isAxiosError(error)){
-      console.error(error.response?.data)
+      const errorMessage = error.response?.data?.message ?? 'Unknown error';
+      console.error('Aurinko API Error:', error.response?.data);
+      throw new Error(`Failed to get account details: ${errorMessage}`);
     }
-    else{
-      console.error(error)
-    }
-    console.error(error)
+    console.error('Unexpected error:', error);
+    throw error;
   }
 }

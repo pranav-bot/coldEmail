@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useState } from "react";
 import AccountSwitcher from "./account-switcher";
-
+import Sidebar from "./sidebar";
 type Props = {
     defaultLayout: number[] | undefined;
     navCollaspedSize: number;
@@ -51,7 +51,7 @@ const Mail = ({
                             <AccountSwitcher isCollapsed={isCollapsed} />
                         </div>
                         <Separator />
-                        Sidebar
+                        <Sidebar isCollapsed={isCollapsed} />
                         <div className="flex-1"></div>
                         ASK AI
                     </div>
