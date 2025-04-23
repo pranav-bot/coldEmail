@@ -12,15 +12,17 @@ import { useState } from "react";
 import AccountSwitcher from "./account-switcher";
 import Sidebar from "./sidebar";
 import ThreadList from "./thread-list";
+import ThreadDisplay from "./thread-display";
+
 type Props = {
     defaultLayout: number[] | undefined;
-    navCollaspedSize: number;
+    navCollapsedSize: number;
     defaultCollapsed: boolean;
 };
 
 const Mail = ({
     defaultLayout = [20, 32, 48],
-    navCollaspedSize = 20,
+    navCollapsedSize = 20,
     defaultCollapsed = false,
 }: Props) => {
     const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
@@ -35,7 +37,7 @@ const Mail = ({
             >
                 <ResizablePanel
                     defaultSize={defaultLayout[0]}
-                    collapsedSize={navCollaspedSize}
+                    collapsedSize={navCollapsedSize}
                     collapsible={true}
                     minSize={15}
                     maxSize={40}
@@ -75,7 +77,7 @@ const Mail = ({
                 </ResizablePanel>
                 <ResizableHandle withHandle />
                 <ResizablePanel defaultSize={defaultLayout[2]} minSize={30} >
-                    thread display
+                    <ThreadDisplay />
                 </ResizablePanel>
             </ResizablePanelGroup>
         </Tooltip>
