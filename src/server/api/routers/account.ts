@@ -3,6 +3,20 @@ import { createTRPCRouter, privateProcedure } from "../trpc";
 import { db } from "@/server/db";
 import { type Prisma } from "@prisma/client";
 
+export const authoriseAccountAccess = async (accountId: string, userId: string) => {
+    const account = await db.account.findFirst({
+        where: {
+            id: accountId,
+            userId: userId,
+        },
+        select: {
+            id: true, emailAddress: true, name: true, token: true
+        }
+    })
+    if (!account) throw new Error("Invalid token")
+    return account
+}
+
 export const accountRouter = createTRPCRouter({
     getAccounts: privateProcedure.query(async ({ctx}) => {
         return await ctx.db.account.findMany({
@@ -20,48 +34,7 @@ export const accountRouter = createTRPCRouter({
         accountId: z.string(),
         tab: z.enum(['inbox', 'drafts', 'sent']),
     })).query(async ({ctx, input}) => {
-        console.log('Getting thread count for:', { accountId: input.accountId, tab: input.tab });
-        
-        const account = await db.account.findFirst({
-            where: {
-                id: input.accountId,
-                userId: ctx.auth.userId,
-            },
-            select: {
-                id: true,
-                token: true,
-            },
-        });
-
-        if (!account) {
-            console.log('Account not found:', input.accountId);
-            throw new Error('Account not found');
-        }
-
-        // First, get the total thread count for this account
-        const totalThreads = await ctx.db.thread.count({
-            where: {
-                accountId: account.id,
-            }
-        });
-
-        console.log('Total threads for account:', totalThreads);
-
-        // Get a sample of threads to check their status flags
-        const sampleThreads = await ctx.db.thread.findMany({
-            where: {
-                accountId: account.id,
-            },
-            select: {
-                id: true,
-                inboxStatus: true,
-                draftStatus: true,
-                sentStatus: true,
-            },
-            take: 5,
-        });
-
-        console.log('Sample thread statuses:', sampleThreads);
+        const account = await authoriseAccountAccess(input.accountId, ctx.auth.userId);
 
         let filter: Prisma.ThreadWhereInput = {};
         if (input.tab === 'inbox') {
@@ -77,22 +50,59 @@ export const accountRouter = createTRPCRouter({
                 sentStatus: true,
             };
         }
+        return await ctx.db.thread.count({
+            where: filter
+        })
+    }),
+    getThreads: privateProcedure.input(z.object({
+        accountId: z.string(),
+        tab: z.enum(['inbox', 'drafts', 'sent']),
+        done: z.boolean().optional(),
+    })).query(async ({ctx, input}) => {
+        const account = await authoriseAccountAccess(input.accountId, ctx.auth.userId);
+        let filter: Prisma.ThreadWhereInput = {};
+        if (input.tab === 'inbox') {
+            filter = {
+                inboxStatus: true,
+            };
+        }
+        if (input.tab === 'drafts') {
+            filter = {
+                draftStatus: true,
+            };
+        }
+        if (input.tab === 'sent') {
+            filter = {
+                sentStatus: true,
+            };
+        }
+        filter.done = {
+            equals: input.done,
+        }
 
-        const count = await ctx.db.thread.count({
-            where: {
-                accountId: account.id,
-                ...filter,
-            }
+        return await ctx.db.thread.findMany({
+            where: filter,
+            include: {
+                emails: {
+                    orderBy: {
+                        sentAt: 'asc',
+                    },
+                    select: {
+                        id: true,
+                        subject: true,
+                        sentAt: true,
+                        from: true,
+                        to: true,
+                        bodySnippet: true,
+                        sysLabels: true,
+                        emailLabel: true,
+                    },
+                },
+            },
+            take: 15,
+            orderBy: {
+                lastMessageDate: 'desc',
+            },
         });
-
-        console.log('Thread count result:', { 
-            accountId: input.accountId, 
-            tab: input.tab, 
-            count,
-            totalThreads,
-            sampleThreads 
-        });
-        
-        return count;
     }),
 });
