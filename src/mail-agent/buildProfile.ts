@@ -1,6 +1,6 @@
 import type { LanguageModelV1 } from "ai";
 import { Template } from "./enums";
-import { generateText } from "ai";
+import { generateObject } from "ai";
 import contentAnalyzer from "./contentAnalyzer";
 import { z } from "zod";
 
@@ -182,28 +182,6 @@ const buildProfile = async (
        - Unique value proposition
        - Compelling career story
        - Notable achievements to highlight
-
-    Format the response as a JSON object with these fields:
-    {
-        "targetRoles": [],
-        "preferredIndustries": [],
-        "locationPreferences": [],
-        "salaryExpectations": "",
-        "additionalPreferences": {},
-        "communicationStyle": {
-            "tone": "",
-            "keyPoints": [],
-            "painPoints": [],
-            "valueProposition": "",
-            "callToAction": ""
-        },
-        "personalBranding": {
-            "strengths": [],
-            "uniqueValue": "",
-            "careerStory": "",
-            "achievements": []
-        }
-    }
     `;
 
     const salesPrompt = `
@@ -236,65 +214,44 @@ const buildProfile = async (
        - Key differentiators from competitors
        - Market gaps the product/service fills
        - Success stories and case studies to reference
-
-    Format the response as a JSON object with these fields:
-    {
-        "targetMarkets": [],
-        "competitiveAdvantages": [],
-        "salesObjectives": [],
-        "marketPositioning": "",
-        "additionalConsiderations": {},
-        "communicationStrategy": {
-            "tone": "",
-            "keyMessages": [],
-            "painPoints": [],
-            "valueProposition": "",
-            "objectionHandling": [],
-            "callToAction": ""
-        },
-        "positioning": {
-            "uniqueValue": "",
-            "differentiators": [],
-            "marketGaps": [],
-            "successStories": []
-        }
-    }
     `;
 
     try {
         const prompt = template === Template.JobSearch ? jobSearchPrompt : salesPrompt;
-        const result = await generateText({
+        const schema = template === Template.JobSearch ? jobSearchAdditionalInfoSchema : salesAdditionalInfoSchema;
+
+        // Use generateObject instead of generateText
+        const result = await generateObject({
             model: model,
             prompt: prompt,
+            schema: schema
         });
 
         if (template === Template.JobSearch) {
-            const additionalInfo = jobSearchAdditionalInfoSchema.parse(JSON.parse(result.text));
             return {
                 ...(content as JobProfile),
                 intent: userIntent,
-                targetRoles: additionalInfo.targetRoles,
-                preferredIndustries: additionalInfo.preferredIndustries,
-                locationPreferences: additionalInfo.locationPreferences,
-                salaryExpectations: additionalInfo.salaryExpectations,
-                additionalSections: additionalInfo.additionalPreferences,
-                communicationStyle: additionalInfo.communicationStyle,
-                personalBranding: additionalInfo.personalBranding
+                targetRoles: result.object.targetRoles,
+                preferredIndustries: result.object.preferredIndustries,
+                locationPreferences: result.object.locationPreferences,
+                salaryExpectations: result.object.salaryExpectations,
+                additionalSections: result.object.additionalPreferences,
+                communicationStyle: result.object.communicationStyle,
+                personalBranding: result.object.personalBranding
             };
         } else {
-            const additionalInfo = salesAdditionalInfoSchema.parse(JSON.parse(result.text));
             return {
                 ...(content as SalesProfile),
                 intent: userIntent,
-                targetMarkets: additionalInfo.targetMarkets,
-                competitiveAdvantages: additionalInfo.competitiveAdvantages,
-                salesObjectives: additionalInfo.salesObjectives,
+                targetMarkets: Array.isArray(result.object.targetMarkets) ? result.object.targetMarkets : [],
+                competitiveAdvantages: result.object.competitiveAdvantages,
+                salesObjectives: result.object.salesObjectives,
                 marketContext: {
                     ...(content as SalesProfile).marketContext,
-                    position: additionalInfo.marketPositioning
+                    position: result.object.marketPositioning
                 },
-                communicationStrategy: additionalInfo.communicationStrategy,
-                positioning: additionalInfo.positioning
+                communicationStrategy: result.object.communicationStrategy,
+                positioning: result.object.positioning
             };
         }
     } catch (error) {

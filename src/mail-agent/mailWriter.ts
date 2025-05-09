@@ -88,10 +88,10 @@ ${JSON.stringify(profile, null, 2)}
 Please provide:
 1. A short connection request introduction (no more than 300 characters).
 2. A follow-up LinkedIn message (no more than 500 characters) that:
-   - References the connection
-   - Shows understanding of their needs
-   - Highlights a key achievement
-   - Includes a clear call to action
+- References the connection
+- Shows understanding of their needs
+- Highlights a key achievement
+- Includes a clear call to action
 
 Format the response as a JSON object with these fields:
 {
@@ -116,10 +116,10 @@ ${JSON.stringify(profile, null, 2)}
 Please provide:
 1. A short connection request introduction (no more than 300 characters).
 2. A follow-up LinkedIn message (no more than 500 characters) that:
-   - References the connection
-   - Demonstrates understanding of their business challenges
-   - Highlights a key benefit or success story
-   - Includes a clear call to action
+- References the connection
+- Demonstrates understanding of their business challenges
+- Highlights a key benefit or success story
+- Includes a clear call to action
 
 Format the response as a JSON object with these fields:
 {
@@ -129,7 +129,6 @@ Format the response as a JSON object with these fields:
 }
 `;
 
-// Function to write email
 export const writeEmail = async (
     lead: Lead,
     profile: JobProfile | SalesProfile,
@@ -142,14 +141,25 @@ export const writeEmail = async (
 
     try {
         const result = await generateText({ model, prompt });
-        const content = JSON.parse(result.text) as EmailContent;
-
-        if (!content.subject || !content.body) {
+        // Clean up the response by removing backticks and extra whitespace
+        const cleanResult = result.text.replace(/```json\n|```/g, '').trim();
+        let content: EmailContent;
+        
+        try {
+            content = JSON.parse(cleanResult) as EmailContent;
+        } catch (error) {
+            console.error('Failed to parse email content:', cleanResult);
             throw new Error('Invalid email content generated');
         }
 
-        // Populate 'to' with email if available
-        content.to = lead.contactInfo.email || '';
+        // Ensure required fields are present
+        if (!content.subject || !content.body) {
+            throw new Error('Missing required fields in email content');
+        }
+
+        // Populate 'to' field with email if available
+        content.to = lead.contactInfo.email || 'mail not available';
+        
         return content;
     } catch (error) {
         console.error('Error writing email:', error);
@@ -157,7 +167,6 @@ export const writeEmail = async (
     }
 };
 
-// Function to write LinkedIn message
 export const writeLinkedInMessage = async (
     lead: Lead,
     profile: JobProfile | SalesProfile,
@@ -170,14 +179,25 @@ export const writeLinkedInMessage = async (
 
     try {
         const result = await generateText({ model, prompt });
-        const content = JSON.parse(result.text) as LinkedInContent;
-
-        if (!content.intro || !content.message) {
+        // Clean up the response by removing backticks and extra whitespace
+        const cleanResult = result.text.replace(/```json\n|```/g, '').trim();
+        let content: LinkedInContent;
+        
+        try {
+            content = JSON.parse(cleanResult) as LinkedInContent;
+        } catch (error) {
+            console.error('Failed to parse LinkedIn content:', cleanResult);
             throw new Error('Invalid LinkedIn content generated');
         }
 
-        // Populate 'to' with LinkedIn URL if available
+        // Ensure required fields are present
+        if (!content.intro || !content.message) {
+            throw new Error('Missing required fields in LinkedIn content');
+        }
+
+        // Populate 'to' field with LinkedIn URL if available
         content.to = lead.contactInfo.linkedin ?? '';
+        
         return content;
     } catch (error) {
         console.error('Error writing LinkedIn message:', error);
