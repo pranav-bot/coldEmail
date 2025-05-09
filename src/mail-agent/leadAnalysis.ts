@@ -63,6 +63,8 @@ type Lead = {
     };
 };
 
+export type { Lead };
+
 type ParsedContent = Record<string, any>[] | Record<string, Record<string, any>[]>;
 
 const getJobSearchPrompt = (content: ParsedContent) => `

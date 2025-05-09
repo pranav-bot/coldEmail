@@ -99,6 +99,8 @@ type SalesProfile = {
     };
 };
 
+export type { JobProfile, SalesProfile };
+
 const jobSearchAdditionalInfoSchema = z.object({
     targetRoles: z.array(z.string()),
     preferredIndustries: z.array(z.string()),
