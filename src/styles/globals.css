@@ -143,3 +143,13 @@
     @apply bg-background text-foreground;
   }
 }
+
+.tiptap.Prosemirror {
+  outline: none;
+}
+
+.is-active {
+  border-color: #dadada;
+  border-radius: 4px;
+  padding: 0px 2px ;
+}
