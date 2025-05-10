@@ -5,6 +5,7 @@ import { Text } from "@tiptap/extension-text";
 import { useState } from "react";
 import EditorMenubar from "./editor-menubar";
 import { Separator } from "@/components/ui/separator";
+import TagInput from "./tag-input";
 
 type Props = {};
 
@@ -41,12 +42,25 @@ const EmailEditor = (props: Props) => {
       <div className="p-4 pb-0 space-y-2">
         {expanded && (
             <>
-             cc inputs
+             <TagInput
+                defaultValues={[{ label: "Pranav", value: "Pranav" }]}
+                placeholder="Add Recipients"
+                label="To"
+                onChange={console.log}
+                value={[]}
+             />
             </>
         )}
       </div>
       <div className="flex items-center gap-2">
-        <div className="cursor-pointer" onClick={() => setExpanded(!expanded)}></div>
+        <div className="cursor-pointer" onClick={() => setExpanded(!expanded)}>
+            <span className="text-green-600 font-medium">
+                Draft {" "}
+            </span>
+            <span>
+                to Pranav
+            </span>
+        </div>
       </div>
 
       <div className="prose w-full px-4">
