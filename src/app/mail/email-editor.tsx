@@ -6,12 +6,36 @@ import { useState } from "react";
 import EditorMenubar from "./editor-menubar";
 import { Separator } from "@/components/ui/separator";
 import TagInput from "./tag-input";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 
-type Props = {};
+type Props = {
+  subject: string;
+  setSubject: (value: string) => void;
+  toValues: { label: string; value: string }[];
+  setToValues: (values: { label: string; value: string }[]) => void;
+  ccValues: { label: string; value: string }[];
+  setCcValues: (values: { label: string; value: string }[]) => void;
+  to: string[];
+  handleSend: (value: string) => void;
+  isSending: boolean;
+  defaultToolBarExpanded: boolean;
+};
 
-const EmailEditor = (props: Props) => {
+const EmailEditor = ({
+  subject,
+  setSubject,
+  toValues,
+  setToValues,
+  ccValues,
+  setCcValues,
+  to,
+  handleSend,
+  isSending,
+  defaultToolBarExpanded,
+}: Props) => {
   const [value, setValue] = useState<string>("");
-  const [expanded, setExpanded] = useState<boolean>(false);
+  const [expanded, setExpanded] = useState<boolean>(defaultToolBarExpanded);
 
   const CustomText = Text.extend({
     addKeyboardShortcuts() {
@@ -39,27 +63,34 @@ const EmailEditor = (props: Props) => {
       <div className="flex border-b p-4 py-2">
         <EditorMenubar editor={editor} />
       </div>
-      <div className="p-4 pb-0 space-y-2">
+      <div className="space-y-2 p-4 pb-0">
         {expanded && (
-            <>
-             <TagInput
-                defaultValues={[{ label: "Pranav", value: "Pranav" }]}
-                placeholder="Add Recipients"
-                label="To"
-                onChange={console.log}
-                value={[]}
-             />
-            </>
+          <>
+            <TagInput
+              placeholder="Add Recipients"
+              label="To"
+              onChange={setToValues}
+              value={toValues}
+            />
+            <TagInput
+              placeholder="Add Recipients"
+              label="Cc"
+              onChange={setCcValues}
+              value={ccValues}
+            />
+            <Input
+              id="subject"
+              placeholder="Subject"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+            />
+          </>
         )}
       </div>
       <div className="flex items-center gap-2">
         <div className="cursor-pointer" onClick={() => setExpanded(!expanded)}>
-            <span className="text-green-600 font-medium">
-                Draft {" "}
-            </span>
-            <span>
-                to Pranav
-            </span>
+          <span className="font-medium text-green-600">Draft </span>
+          <span>to {to.join(",")}</span>
         </div>
       </div>
 
@@ -75,6 +106,15 @@ const EmailEditor = (props: Props) => {
           </kbd>{" "}
           For AI auto-completiion
         </span>
+        <Button
+          onClick={async () => {
+            editor?.commands?.clearContent();
+            handleSend(value);
+          }}
+          disabled={isSending}
+        >
+          Send
+        </Button>
       </div>
     </div>
   );

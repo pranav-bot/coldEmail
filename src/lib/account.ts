@@ -1,5 +1,5 @@
 import axios from "axios";
-import type { EmailMessage, SyncResponse, SyncUpdatedResponse } from "./types";
+import type { EmailAddress, EmailMessage, SyncResponse, SyncUpdatedResponse } from "./types";
 
 export class Account {
     private token: string;
@@ -69,6 +69,62 @@ export class Account {
             }
             else {
                 console.error("Error performing initial sync: ", error)
+            }
+        }
+    }
+
+    async sendEmail({
+        from,
+        subject,
+        body,
+        inReplyTo,
+        threadId,
+        references,
+        to,
+        cc,
+        bcc,
+        replyTo
+
+    }: {from: EmailAddress,
+        subject: string,
+        body: string,
+        inReplyTo?: string,
+        threadId?: string,
+        references?: string[],
+        to: EmailAddress[],
+        cc?: EmailAddress[],
+        bcc?: EmailAddress[],
+        replyTo?: EmailAddress
+    }){
+        try{
+            const response = await axios.post(`https://api.aurinko.io/v1/email/messages`, {
+                from,
+                subject,
+                body,
+                inReplyTo,
+                threadId,
+                references,
+                to,
+                cc,
+                bcc,
+                replyTo: [replyTo]
+            }, {
+                params: {
+                    returnIds: true
+                },
+                headers: {
+                    Authorization: `Bearer ${this.token}`
+                }
+            })
+
+            return response.data;
+        }
+        catch (error) {
+            if (axios.isAxiosError(error)) {
+                console.error("Error sending email: ", error.response?.data)
+            }
+            else {
+                console.error("Error sending email: ", error)
             }
         }
     }
