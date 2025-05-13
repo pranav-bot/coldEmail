@@ -7,6 +7,7 @@ const isPublicRoute = createRouteMatcher([
   '/sso-callback(.*)',
   '/api/initial-sync(.*)',
   '/api/test-clerk-webhook(.*)',
+  "/api/trpc(.*)"
 ])
 
 export default clerkMiddleware(async (auth, req) => {
