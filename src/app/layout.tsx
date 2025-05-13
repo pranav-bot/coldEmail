@@ -28,23 +28,23 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <ClerkProvider>
-    <html lang="en" className={`${geist.variable}`}>
-      <body>
-      <ThemeProvider
+      <html lang="en" className={`${geist.variable}`} suppressHydrationWarning>
+        <body>
+          <ThemeProvider
             attribute="class"
             defaultTheme="system"
             enableSystem
             disableTransitionOnChange
           >
-        <TRPCReactProvider>
-          <KBar>
-          {children}
-          <Toaster />
-          </KBar>
-          </TRPCReactProvider>
-        </ThemeProvider>
-      </body>
-    </html>
+            <TRPCReactProvider>
+              <KBar>
+                {children}
+                <Toaster />
+              </KBar>
+            </TRPCReactProvider>
+          </ThemeProvider>
+        </body>
+      </html>
     </ClerkProvider>
   );
 }
