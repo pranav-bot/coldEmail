@@ -17,6 +17,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import { StepEditor } from "@/components/step-editor"
+
+type WorkflowStep = {
+    name: string;
+    content: string;
+    status: 'pending' | 'editing' | 'complete';
+}
 
 export function WorkflowClient() {
     const [userInput, setUserInput] = useState("")
@@ -32,6 +39,13 @@ export function WorkflowClient() {
         status: 'idle'
     })
     const [selectedTemplate, setSelectedTemplate] = useState<Template>(Template.JobSearch)
+    const [steps, setSteps] = useState<WorkflowStep[]>([
+        { name: 'Enhanced Intent', content: '', status: 'pending' },
+        { name: 'Profile Analysis', content: '', status: 'pending' },
+        { name: 'Lead Analysis', content: '', status: 'pending' },
+        { name: 'Generated Content', content: '', status: 'pending' }
+    ]);
+    const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
     useEffect(() => {
         const loadWorkflows = async () => {
@@ -88,6 +102,13 @@ export function WorkflowClient() {
 
             const result = await response.json()
             
+            // Update the first step with enhanced intent
+            setSteps(prev => prev.map((step, idx) => 
+                idx === 0 
+                    ? { ...step, status: 'editing', content: result.enhancedIntent }
+                    : step
+            ))
+
             // Create new workflow in history
             const newWorkflow = {
                 title: `Workflow #${workflowCount}`,
@@ -136,6 +157,58 @@ export function WorkflowClient() {
             }))
         }
     }
+
+    const handleStepSubmit = async (stepContent: string) => {
+        try {
+            const formData = new FormData();
+            formData.append('userInput', userInput);
+            formData.append('template', selectedTemplate);
+            formData.append('resume', resumeFile!);
+            formData.append('leads', leadsFile!);
+            formData.append('step', steps[currentStepIndex].name);
+            formData.append('stepContent', stepContent);
+            // Add previous step content if it exists
+            if (currentStepIndex > 0) {
+                formData.append('previousStepContent', steps[currentStepIndex - 1].content);
+            }
+
+            const response = await fetch('/api/workflow/step', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to process step');
+            }
+
+            const result = await response.json();
+            
+            // Update current step status
+            setSteps(prev => prev.map((step, idx) => 
+                idx === currentStepIndex 
+                    ? { ...step, status: 'complete', content: stepContent }
+                    : step
+            ));
+
+            // Move to next step
+            if (currentStepIndex < steps.length - 1) {
+                setCurrentStepIndex(prev => prev + 1);
+                setSteps(prev => prev.map((step, idx) => 
+                    idx === currentStepIndex + 1 
+                        ? { ...step, status: 'editing', content: result.content }
+                        : step
+                ));
+            }
+        } catch (error) {
+            console.error('Step processing error:', error);
+            setWorkflowState(prev => ({
+                ...prev,
+                status: 'error',
+                error: error instanceof Error ? error.message : 'Unknown error'
+            }));
+        }
+    };
 
     const handleNewWorkflow = () => {
         // Reset the current workflow state
@@ -279,47 +352,23 @@ export function WorkflowClient() {
 
                 {/* Generated Content Panel */}
                 <ResizablePanel defaultSize={45}>
-                    <div className="flex h-full flex-col overflow-hidden"> {/* Added overflow-hidden */}
+                    <div className="flex h-full flex-col overflow-hidden">
                         <div className="p-4 border-b">
                             <h2 className="text-lg font-semibold">Generated Content</h2>
                         </div>
-                        <ScrollArea className="flex-1 h-[calc(100vh-5rem)]"> {/* Added fixed height calculation */}
+                        <ScrollArea className="flex-1 h-[calc(100vh-5rem)]">
                             <div className="p-4">
-                                {workflowState.status === 'complete' && (
-                                    <div className="space-y-6">
-                                        <div>
-                                            <h3 className="font-medium">Enhanced Intent:</h3>
-                                            <p className="text-sm mt-1">{workflowState.enhancedIntent}</p>
-                                        </div>
-
-                                        {workflowState.leads.map((result, index) => (
-                                            <div key={index} className="border rounded-lg p-4">
-                                                <h3 className="font-medium mb-2">
-                                                    {result.lead.contactInfo.name} - {result.lead.companyInfo.name}
-                                                </h3>
-                                                <div className="space-y-4">
-                                                    <div>
-                                                        <h4 className="text-sm font-medium">Email</h4>
-                                                        <p className="text-sm text-muted-foreground mt-1">
-                                                            Subject: {result.emailContent.subject}
-                                                        </p>
-                                                        <p className="text-sm whitespace-pre-wrap mt-1">
-                                                            {result.emailContent.body}
-                                                        </p>
-                                                    </div>
-                                                    <div>
-                                                        <h4 className="text-sm font-medium">LinkedIn</h4>
-                                                        <p className="text-sm text-muted-foreground mt-1">
-                                                            Connection Request: {result.linkedInContent.intro}
-                                                        </p>
-                                                        <p className="text-sm whitespace-pre-wrap mt-1">
-                                                            {result.linkedInContent.message}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ))}
+                                {workflowState.status === 'processing' && (
+                                    <div className="flex items-center justify-center">
+                                        <Loader2 className="h-8 w-8 animate-spin" />
                                     </div>
+                                )}
+
+                                {workflowState.status === 'complete' && currentStepIndex < steps.length && (
+                                    <StepEditor
+                                        step={steps[currentStepIndex]}
+                                        onSubmit={handleStepSubmit}
+                                    />
                                 )}
 
                                 {workflowState.status === 'error' && (

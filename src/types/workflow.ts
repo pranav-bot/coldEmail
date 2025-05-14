@@ -15,11 +15,17 @@ export type WorkflowResult = {
     };
 };
 
+export type WorkflowStep = {
+    name: string;
+    content: string;
+    status: 'pending' | 'editing' | 'complete';
+}
+
 export type WorkflowState = {
     userInput: string;
     enhancedIntent: string;
-    profile: JobProfile | SalesProfile | null;
-    leads: WorkflowResult[];
+    profile: any;
+    leads: any[];
     status: 'idle' | 'processing' | 'complete' | 'error';
     error?: string;
 };
