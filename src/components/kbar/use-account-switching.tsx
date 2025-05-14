@@ -1,10 +1,14 @@
+import { useAuth } from "@clerk/nextjs";
 import { api } from '@/trpc/react'
 import { useRegisterActions } from 'kbar'
 import React from 'react'
 import { useLocalStorage } from 'usehooks-ts'
 
 const useAccountSwitching = () => {
-    const { data: accounts } = api.account.getAccounts.useQuery()
+    const { isSignedIn } = useAuth();
+    const { data: accounts } = api.account.getAccounts.useQuery(undefined, {
+        enabled: isSignedIn // Only run query when user is signed in
+    });
 
     // Create some fake data for demonstration purposes
     const mainAction = [{

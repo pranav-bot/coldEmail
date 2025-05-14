@@ -7,23 +7,24 @@ export async function syncEmailsToDatabase(
     emails: EmailMessage[],
     accountId: string,
 ) {
-    console.log("Syncing emails to database", emails.length);
+    // Sort emails by date and take only the last 10
+    const sortedEmails = emails.sort((a, b) => 
+        new Date(b.sentAt).getTime() - new Date(a.sentAt).getTime()
+    ).slice(0, 10);
+
+    console.log(`Syncing ${sortedEmails.length} most recent emails to database`);
     const limit = pLimit(5);
 
     try {
-        // await Promise.all(
-        //     emails.map((email, index) => upsertEmail(email, accountId, index)),
-        // );
-        let i=1;
-        for (const email of emails) {
-            if (i==5){
-                break;
-            }
-            await upsertEmail(email, accountId, i);
-            i++;
-        }
+        const tasks = sortedEmails.map((email, index) => 
+            limit(() => upsertEmail(email, accountId, index))
+        );
+        
+        await Promise.all(tasks);
+        console.log(`Successfully synced ${sortedEmails.length} recent emails`);
     } catch (error) {
         console.error("Error syncing emails to database", error);
+        throw error;
     }
 }
 

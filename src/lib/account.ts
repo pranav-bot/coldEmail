@@ -11,46 +11,103 @@ export class Account {
     }
 
     private async startSync() {
+        console.log('Starting initial sync with token:', this.token.substring(0, 10) + '...');
+        
         const response = await axios.post<SyncResponse>(`https://api.aurinko.io/v1/email/sync`, {}, {
             headers: {
-                Authorization: `Bearer ${this.token}`
+                Authorization: `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
             },
             params: {
-                daysWithin: 2,
-                bodyType: 'html'
+                daysWithin: 2, // Increased from 2 to 30 days
+                bodyType: 'html',
+                includeDeleted: false,
+                includeSpam: false,
+                includeAttachments: true
             }
-        })
+        });
+
+        console.log('Initial sync full response:', {
+            status: response.status,
+            ready: response.data.ready,
+            hasToken: !!response.data.syncUpdatedToken,
+            fullResponse: response.data
+        });
 
         return response.data;
     }
+
     async getUpdatedEmails({deltaToken, pageToken}: {deltaToken?: string, pageToken?: string}) {
         const params: Record<string, string> = {}
         if (deltaToken) params.deltaToken = deltaToken;
         if (pageToken) params.pageToken = pageToken;
 
+        console.log('Fetching updated emails:', {
+            deltaToken: deltaToken?.substring(0, 20) + '...',
+            pageToken,
+            fullParams: params
+        });
+
         const response = await axios.get<SyncUpdatedResponse>(`https://api.aurinko.io/v1/email/sync/updated`, {
             headers: {
-                Authorization: `Bearer ${this.token}`
+                Authorization: `Bearer ${this.token}`,
+                'Content-Type': 'application/json'
             },
             params
-        })
+        });
+
+        console.log('Updated emails response:', {
+            status: response.status,
+            recordCount: response.data.records?.length ?? 0,
+            hasNextPage: !!response.data.nextPageToken,
+            hasNextDelta: !!response.data.nextDeltaToken,
+            fullResponse: response.data
+        });
 
         return response.data;
     }
 
     async performInitialSync() {
         try {
-            let syncResponse = await this.startSync();
-            while (!syncResponse.ready) {
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                syncResponse = await this.startSync();
+            // Force a new initial sync by clearing any existing delta token
+            const account = await db.account.findUnique({
+                where: { token: this.token },
+            });
+
+            if (account) {
+                await db.account.update({
+                    where: { id: account.id },
+                    data: { nextDeltaToken: null }
+                });
             }
-            let storedDeltaToken: string | undefined = syncResponse.syncUpdatedToken;
+
+            let syncResponse = await this.startSync();
+            let retries = 0;
+            const maxRetries = 5;
+
+            while (!syncResponse.ready && retries < maxRetries) {
+                console.log(`Waiting for sync (attempt ${retries + 1}/${maxRetries})...`);
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Increased wait time
+                syncResponse = await this.startSync();
+                retries++;
+            }
+
+            if (!syncResponse.ready) {
+                throw new Error("Initial sync failed to become ready after max retries");
+            }
+
+            if (!syncResponse.syncUpdatedToken) {
+                throw new Error("No sync token received from initial sync");
+            }
+
+            let storedDeltaToken = syncResponse.syncUpdatedToken;
             let updatedResponse = await this.getUpdatedEmails({deltaToken: storedDeltaToken});
+            let allEmails: EmailMessage[] = updatedResponse.records;
+
             if (updatedResponse.nextDeltaToken) {
                 storedDeltaToken = updatedResponse.nextDeltaToken;
             }
-            let allEmails: EmailMessage[] = updatedResponse.records;
+
             while (updatedResponse.nextPageToken) {
                 updatedResponse = await this.getUpdatedEmails({pageToken: updatedResponse.nextPageToken});
                 allEmails = allEmails.concat(updatedResponse.records);
@@ -58,72 +115,81 @@ export class Account {
                     storedDeltaToken = updatedResponse.nextDeltaToken;
                 }
             }
-            console.log("initial sync complete")
 
+            console.log("Initial sync complete with delta token:", storedDeltaToken);
             return {
                 emails: allEmails,
                 deltaToken: storedDeltaToken
-            }
-        }
-        catch (error) {
+            };
+        } catch (error) {
             if (axios.isAxiosError(error)) {
-                console.error("Error performing initial sync: ", error.response?.data)
+                console.error('Sync error details:', {
+                    status: error.response?.status,
+                    statusText: error.response?.statusText,
+                    data: error.response?.data,
+                    headers: error.response?.headers
+                });
+                throw new Error(`Sync failed: ${error.response?.data?.message || error.message}`);
             }
-            else {
-                console.error("Error performing initial sync: ", error)
-            }
+            throw error;
         }
     }
 
     async syncEmails() {
         const account = await db.account.findUnique({
-            where: {
-                token: this.token,
-            }})
-            if (!account) throw new Error("Account not found");
-            if (!account.nextDeltaToken)  throw new Error("No delta token found");
-            let response = await this.getUpdatedEmails({deltaToken: account.nextDeltaToken});
-            let storedDeltaToken: string | undefined = account.nextDeltaToken;
-            let allEmails: EmailMessage[] = response.records;
+            where: { token: this.token },
+        });
+
+        if (!account) throw new Error("Account not found");
+
+        // If no delta token, perform initial sync
+        if (!account.nextDeltaToken) {
+            console.log("No delta token found, performing initial sync");
+            const initialSync = await this.performInitialSync();
+            if (!initialSync?.deltaToken) {
+                throw new Error("Failed to get delta token from initial sync");
+            }
+            return initialSync;
+        }
+
+        let response = await this.getUpdatedEmails({deltaToken: account.nextDeltaToken});
+        let storedDeltaToken: string | undefined = account.nextDeltaToken;
+        let allEmails: EmailMessage[] = response.records;
+        if (response.nextDeltaToken) {
+            storedDeltaToken = response.nextDeltaToken;
+        }
+        while (response.nextPageToken) {
+            response = await this.getUpdatedEmails({pageToken: response.nextPageToken});
+            allEmails = allEmails.concat(response.records);
             if (response.nextDeltaToken) {
                 storedDeltaToken = response.nextDeltaToken;
             }
-            while (response.nextPageToken) {
-                response = await this.getUpdatedEmails({pageToken: response.nextPageToken});
-                allEmails = allEmails.concat(response.records);
-                if (response.nextDeltaToken) {
-                    storedDeltaToken = response.nextDeltaToken;
-                }
-            }
+        }
 
-            try {
-                await syncEmailsToDatabase(allEmails, account.id);
-
-
+        try {
+            await syncEmailsToDatabase(allEmails, account.id);
+        }
+        catch (error) {
+            if (axios.isAxiosError(error)) {
+                console.error("Error syncing emails: ", error.response?.data)
             }
-            catch (error) {
-                if (axios.isAxiosError(error)) {
-                    console.error("Error syncing emails: ", error.response?.data)
-                }
-                else {
-                    console.error("Error syncing emails: ", error)
-                }
+            else {
+                console.error("Error syncing emails: ", error)
             }
-            await db.account.update({
-                where: {
-                    id: account.id
-                },
-                data: {
-                    nextDeltaToken: storedDeltaToken
-                }
-            })
-            console.log("sync complete")
-            return {
-                emails: allEmails,
-                deltaToken: storedDeltaToken
+        }
+        await db.account.update({
+            where: {
+                id: account.id
+            },
+            data: {
+                nextDeltaToken: storedDeltaToken
             }
-
-            
+        })
+        console.log("sync complete")
+        return {
+            emails: allEmails,
+            deltaToken: storedDeltaToken
+        }
     }
 
     async sendEmail({

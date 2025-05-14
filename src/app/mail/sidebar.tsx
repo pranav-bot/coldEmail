@@ -1,32 +1,33 @@
 'use client'
-import { useLocalStorage } from "usehooks-ts";
 import { Nav } from "./nav";
 import { File, Inbox, Send } from "lucide-react";
 import { api } from "@/trpc/react";
+import { useActiveAccount } from "@/hooks/use-active-account";
+import { useLocalStorage } from "usehooks-ts";
 
 type Props = {
     isCollapsed: boolean;
 }
 
 const Sidebar = ({isCollapsed}: Props) => {
-    const [accountId] = useLocalStorage<string | null>("accountId", null);
+    const { accountId } = useActiveAccount();
     const [tab, setTab] = useLocalStorage<'inbox' | 'drafts' | 'sent'>("tab", 'inbox');
 
-    const { data: inboxThreads, error: inboxError } = api.account.getNumThreads.useQuery({
+    const { data: inboxThreads } = api.account.getNumThreads.useQuery({
         accountId: accountId ?? '',
         tab: 'inbox',
     }, {
         enabled: !!accountId,
     });
 
-    const { data: draftsThreads, error: draftsError } = api.account.getNumThreads.useQuery({
+    const { data: draftsThreads } = api.account.getNumThreads.useQuery({
         accountId: accountId ?? '',
         tab: 'drafts',
     }, {
         enabled: !!accountId,
     });
 
-    const { data: sentThreads, error: sentError } = api.account.getNumThreads.useQuery({
+    const { data: sentThreads } = api.account.getNumThreads.useQuery({
         accountId: accountId ?? '',
         tab: 'sent',
     }, {

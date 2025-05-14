@@ -1,12 +1,12 @@
 import { api } from "@/trpc/react";
 import { useLocalStorage } from "usehooks-ts";
 import { atom, useAtom } from "jotai";
+import { useActiveAccount } from "./use-active-account";
 
 export const threadIdAtom = atom<string | null>(null);
 
 const useThreads = () => {
-    const {data: accounts} = api.account.getAccounts.useQuery();
-    const [accountId] = useLocalStorage<string | null>("accountId", null);
+    const { accountId, activeAccount } = useActiveAccount();
     const [tab] = useLocalStorage<string | null>("tab", 'inbox');
     const [done] = useLocalStorage<boolean | null>("done", false);
     const [threadId, setThreadId] = useAtom(threadIdAtom);
@@ -20,8 +20,7 @@ const useThreads = () => {
         enabled: !!accountId && !!tab,
         placeholderData: e => e,
         refetchInterval: 10000,
-    }
-);
+    });
 
     return {
         threads,
@@ -30,8 +29,8 @@ const useThreads = () => {
         accountId,
         threadId,
         setThreadId,
-        account: accounts?.find(a => a.id === accountId),
+        account: activeAccount,
     }
-}
+};
 
 export default useThreads;

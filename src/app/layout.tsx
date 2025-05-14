@@ -37,10 +37,10 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <TRPCReactProvider>
-              <KBar>
+              
                 {children}
                 <Toaster />
-              </KBar>
+              
             </TRPCReactProvider>
           </ThemeProvider>
         </body>

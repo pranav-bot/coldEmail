@@ -4,6 +4,7 @@ import { db } from "@/server/db";
 import { type Prisma } from "@prisma/client";
 import { emailAddressSchema } from "@/lib/types";
 import { Account } from "@/lib/account";
+import { syncEmailsToDatabase } from "@/lib/sync-to-db"; // Add this import
 
 export const authoriseAccountAccess = async (
   accountId: string,
@@ -82,8 +83,32 @@ export const accountRouter = createTRPCRouter({
         input.accountId,
         ctx.auth.userId,
       );
+
       const acc = new Account(account.token);
-      await acc.syncEmails().catch(console.error);
+
+      // Check if we need initial sync
+      const dbAccount = await ctx.db.account.findUnique({
+        where: { id: input.accountId }
+      });
+
+      if (!dbAccount?.nextDeltaToken) {
+        console.log("Performing initial sync for account:", input.accountId);
+        const initialSync = await acc.performInitialSync();
+        if (initialSync?.deltaToken) {
+          await ctx.db.account.update({
+            where: { id: input.accountId },
+            data: { nextDeltaToken: initialSync.deltaToken }
+          });
+          // Make sure syncEmailsToDatabase is properly called
+          await syncEmailsToDatabase(initialSync.emails, input.accountId);
+        }
+      } else {
+        const syncResult = await acc.syncEmails();
+        if (syncResult?.emails.length > 0) {
+          await syncEmailsToDatabase(syncResult.emails, input.accountId);
+        }
+      }
+
       let filter: Prisma.ThreadWhereInput = {};
       if (input.tab === "inbox") {
         filter = {
@@ -227,5 +252,32 @@ export const accountRouter = createTRPCRouter({
             bcc: input.bcc,
             replyTo: input.replyTo,
         })
-    })
+    }),
+    performInitialSync: privateProcedure
+        .input(z.object({ accountId: z.string() }))
+        .mutation(async ({ ctx, input }) => {
+            const account = await authoriseAccountAccess(
+                input.accountId,
+                ctx.auth.userId,
+            );
+
+            const acc = new Account(account.token);
+            const dbAccount = await ctx.db.account.findUnique({
+                where: { id: input.accountId }
+            });
+
+            if (!dbAccount?.nextDeltaToken) {
+                console.log("Performing initial sync for account:", input.accountId);
+                const initialSync = await acc.performInitialSync();
+                if (initialSync?.deltaToken) {
+                    await ctx.db.account.update({
+                        where: { id: input.accountId },
+                        data: { nextDeltaToken: initialSync.deltaToken }
+                    });
+                    await syncEmailsToDatabase(initialSync.emails, input.accountId);
+                }
+            }
+
+            return { success: true };
+        }),
 });

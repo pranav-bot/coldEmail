@@ -6,33 +6,34 @@ import { useLocalStorage } from "usehooks-ts";
 import { cn } from "@/lib/utils";
 import { Plus } from "lucide-react";
 import { getAurinkoAuthUrl } from "@/lib/aurinko";
+import { useActiveAccount } from "@/hooks/use-active-account";
 type Props = {
     isCollapsed: boolean;
 };
 
 const AccountSwitcher = ({ isCollapsed }: Props) => {
-    const { data } = api.account.getAccounts.useQuery();
-    const [accountId, setAccountId] = useLocalStorage<string | null>("accountId", null);
-    if (!data) return null;
+    const { accountId, setAccountId, accounts } = useActiveAccount();
+    
+    if (!accounts?.length) return null;
 
     return (
-        <Select defaultValue={accountId} onValueChange={setAccountId}>
-                    <SelectTrigger className={cn(
+        <Select value={accountId ?? undefined} onValueChange={setAccountId}>
+            <SelectTrigger className={cn(
             "flex w-full flex-1 items-center gap-2 [&>span]:line-clamp-1 [&>span]:flex [&>span]:w-full [&>span]:items-center [&>span]:gap-1 [&>span]:truncate [&_svg]:h-4 [&_svg]:w-4 [&_svg]:shrink-0",
             isCollapsed &&
             "flex h-9 w-9 shrink-0 items-center justify-center p-0 [&>span]:w-auto [&>svg]:hidden")}aria-label="Select account"
         >
             <SelectValue placeholder="Select account" >
                 <span className={cn({hidden: isCollapsed ,'ml-2':true})}>
-                    {data.find(account => account.id === accountId)?.emailAddress}
+                    {accounts.find(account => account.id === accountId)?.emailAddress}
                 </span>
                 <span className={cn({hidden: !isCollapsed})}>
-                    {data.find(account => account.id === accountId)?.emailAddress[0]}
+                    {accounts.find(account => account.id === accountId)?.emailAddress[0]}
                 </span>
             </SelectValue>
         </SelectTrigger>
         <SelectContent>
-            {data.map(account => (
+            {accounts.map(account => (
                 <SelectItem key={account.id} value={account.id}>
                     {account.emailAddress}
                 </SelectItem>
