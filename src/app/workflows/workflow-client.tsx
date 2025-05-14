@@ -33,6 +33,35 @@ export function WorkflowClient() {
     })
     const [selectedTemplate, setSelectedTemplate] = useState<Template>(Template.JobSearch)
 
+    useEffect(() => {
+        const loadWorkflows = async () => {
+            try {
+                const response = await fetch('/api/workflow/list')
+                if (!response.ok) throw new Error('Failed to load workflows')
+                
+                const workflows = await response.json()
+                setWorkflowHistory(workflows.map((w: any) => ({
+                    id: w.id,
+                    title: w.title,
+                    createdAt: new Date(w.createdAt),
+                    enhancedIntent: w.prompt,
+                    status: 'complete'
+                })))
+                
+                // Set workflow count to be one more than the highest existing number
+                const maxNumber = Math.max(...workflows.map((w: any) => {
+                    const num = parseInt(w.title.split('#')[1])
+                    return isNaN(num) ? 0 : num
+                }), 0)
+                setWorkflowCount(maxNumber + 1)
+            } catch (error) {
+                console.error('Error loading workflows:', error)
+            }
+        }
+
+        loadWorkflows()
+    }, [])
+
     const handleSubmit = async () => {
         try {
             if (!resumeFile || !leadsFile) {
@@ -43,7 +72,7 @@ export function WorkflowClient() {
             
             const formData = new FormData()
             formData.append('userInput', userInput)
-            formData.append('template', selectedTemplate) // Use selected template
+            formData.append('template', selectedTemplate)
             formData.append('resume', resumeFile)
             formData.append('leads', leadsFile)
             
@@ -58,20 +87,46 @@ export function WorkflowClient() {
             }
 
             const result = await response.json()
-            const newWorkflow: WorkflowHistory = {
-                id: Date.now().toString(),
+            
+            // Create new workflow in history
+            const newWorkflow = {
                 title: `Workflow #${workflowCount}`,
-                createdAt: new Date(),
-                enhancedIntent: result.enhancedIntent,
-                status: 'complete'
+                prompt: userInput,
+                content: JSON.stringify(result.profile),
+                type: selectedTemplate,
+                leadMessage: JSON.stringify(result.leads),
             }
 
-            setWorkflowHistory(prev => [newWorkflow, ...prev])
+            // Save workflow to database
+            const saveResponse = await fetch('/api/workflow/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(newWorkflow)
+            })
+
+            if (!saveResponse.ok) {
+                throw new Error('Failed to save workflow')
+            }
+
+            const savedWorkflow = await saveResponse.json()
+
+            // Update local state
+            setWorkflowHistory(prev => [{
+                id: savedWorkflow.id,
+                title: savedWorkflow.title,
+                createdAt: new Date(savedWorkflow.createdAt),
+                enhancedIntent: result.enhancedIntent,
+                status: 'complete'
+            }, ...prev])
+
             setWorkflowCount(prev => prev + 1)
             setWorkflowState({
                 ...result,
                 status: 'complete'
             })
+
         } catch (error) {
             console.error('Workflow error:', error)
             setWorkflowState(prev => ({
