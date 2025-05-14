@@ -23,3 +23,11 @@ export type WorkflowState = {
     status: 'idle' | 'processing' | 'complete' | 'error';
     error?: string;
 };
+
+export type WorkflowHistory = {
+    id: string;
+    title: string;
+    createdAt: Date;
+    enhancedIntent: string;
+    status: WorkflowState['status'];
+}
