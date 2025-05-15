@@ -20,6 +20,7 @@ type StepEditorProps = {
 export function StepEditor({ step, onSubmit }: StepEditorProps) {
     const [editedContent, setEditedContent] = useState(step.content)
     const [parsedContent, setParsedContent] = useState<any>(null)
+    const [isEditing, setIsEditing] = useState(false)
 
     useEffect(() => {
         if (!step.content) {
@@ -338,6 +339,68 @@ export function StepEditor({ step, onSubmit }: StepEditorProps) {
                 >
                     Continue to Next Step
                 </Button>
+            </div>
+        )
+    }
+
+    // Default editor for Enhanced Intent step
+    if (step.name === 'Enhanced Intent') {
+        return (
+            <div className="space-y-4">
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-medium">{step.name}</h3>
+                    {!isEditing && (
+                        <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => setIsEditing(true)}
+                        >
+                            Edit Intent
+                        </Button>
+                    )}
+                </div>
+
+                {isEditing ? (
+                    <div className="space-y-4">
+                        <Textarea
+                            value={editedContent}
+                            onChange={(e) => setEditedContent(e.target.value)}
+                            className="min-h-[400px] text-lg leading-relaxed font-mono"
+                            placeholder="Enter enhanced intent..."
+                        />
+                        <div className="flex justify-end gap-2">
+                            <Button 
+                                variant="outline"
+                                onClick={() => {
+                                    setIsEditing(false)
+                                    setEditedContent(step.content) // Reset to original content
+                                }}
+                            >
+                                Cancel
+                            </Button>
+                            <Button 
+                                onClick={() => {
+                                    setIsEditing(false)
+                                    onSubmit(editedContent)
+                                }}
+                            >
+                                Save Changes
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
+                    <div className="space-y-4">
+                        <div className="bg-muted rounded-lg p-6 text-lg leading-relaxed whitespace-pre-wrap">
+                            {editedContent}
+                        </div>
+                        <Button 
+                            onClick={() => onSubmit(editedContent)} 
+                            className="w-full"
+                        >
+                            Continue to Next Step
+                        </Button>
+                    </div>
+                )}
             </div>
         )
     }
