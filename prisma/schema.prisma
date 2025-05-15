@@ -151,10 +151,11 @@ model EmailAttachment {
 model Workflow {
   id          String   @id @default(cuid())
   title       String
-  prompt      String
-  content     String
-  type        String
-  leadMessage String
+  prompt      String   // Enhanced Intent
+  content     String   // Profile Analysis
+  type        String   // Template type
+  leadMessage String   // Lead Analysis
+  generatedContent String? // Final Generated Content
   userId      String
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt

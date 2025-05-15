@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Template } from "@/mail-agent/enums"
-import { Loader2, Upload, Plus } from "lucide-react"
+import { Loader2, Upload, Plus, ArrowLeft, ArrowRight } from "lucide-react"
 import type { WorkflowState, WorkflowHistory } from "@/types/workflow"
 import { formatDistanceToNow } from "date-fns"
 import {
@@ -46,6 +46,7 @@ export function WorkflowClient() {
         { name: 'Generated Content', content: '', status: 'pending' }
     ]);
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         const loadWorkflows = async () => {
@@ -160,15 +161,18 @@ export function WorkflowClient() {
 
     const handleStepSubmit = async (stepContent: string) => {
         try {
+            setIsLoading(true)
+            
             // Validate content before submitting
             if (steps[currentStepIndex].name !== 'Enhanced Intent') {
                 try {
-                    JSON.parse(stepContent) // Validate JSON
+                    JSON.parse(stepContent)
                 } catch (error) {
                     throw new Error('Invalid JSON format')
                 }
             }
 
+            // First process the step
             const formData = new FormData()
             formData.append('userInput', userInput)
             formData.append('template', selectedTemplate)
@@ -178,36 +182,54 @@ export function WorkflowClient() {
             formData.append('stepContent', stepContent)
             
             if (currentStepIndex > 0) {
-                // Ensure previous step content is valid JSON
                 const prevContent = steps[currentStepIndex - 1].content
                 formData.append('previousStepContent', prevContent)
             }
 
-            const response = await fetch('/api/workflow/step', {
+            const stepResponse = await fetch('/api/workflow/step', {
                 method: 'POST',
                 body: formData
             })
 
-            if (!response.ok) {
-                const error = await response.json()
+            if (!stepResponse.ok) {
+                const error = await stepResponse.json()
                 throw new Error(error.message || 'Failed to process step')
             }
 
-            const result = await response.json()
-            
-            // Update current step status
+            const stepResult = await stepResponse.json()
+
+            // Then update the workflow with the new content
+            if (workflowState.id) { // Check if we have a workflow ID
+                const updateResponse = await fetch('/api/workflow/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        workflowId: workflowState.id,
+                        step: steps[currentStepIndex].name,
+                        content: stepContent,
+                        generatedContent: stepResult.content
+                    })
+                })
+
+                if (!updateResponse.ok) {
+                    console.error('Failed to update workflow state')
+                }
+            }
+
+            // Update UI state
             setSteps(prev => prev.map((step, idx) => 
                 idx === currentStepIndex 
                     ? { ...step, status: 'complete', content: stepContent }
                     : step
             ))
 
-            // Move to next step if available
             if (currentStepIndex < steps.length - 1) {
                 setCurrentStepIndex(prev => prev + 1)
                 setSteps(prev => prev.map((step, idx) => 
                     idx === currentStepIndex + 1 
-                        ? { ...step, status: 'editing', content: result.content }
+                        ? { ...step, status: 'editing', content: stepResult.content }
                         : step
                 ))
             }
@@ -218,6 +240,30 @@ export function WorkflowClient() {
                 status: 'error',
                 error: error instanceof Error ? error.message : 'Unknown error'
             }))
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleBackStep = () => {
+        if (currentStepIndex > 0) {
+            setCurrentStepIndex(prev => prev - 1)
+            setSteps(prev => prev.map((step, idx) => 
+                idx === currentStepIndex - 1
+                    ? { ...step, status: 'editing' }
+                    : step
+            ))
+        }
+    }
+
+    const handleForwardStep = () => {
+        if (currentStepIndex < steps.length - 1) {
+            setCurrentStepIndex(prev => prev + 1)
+            setSteps(prev => prev.map((step, idx) => 
+                idx === currentStepIndex + 1
+                    ? { ...step, status: 'editing' }
+                    : step
+            ))
         }
     }
 
@@ -365,7 +411,33 @@ export function WorkflowClient() {
                 <ResizablePanel defaultSize={45}>
                     <div className="flex h-full flex-col overflow-hidden">
                         <div className="p-4 border-b">
-                            <h2 className="text-lg font-semibold">Generated Content</h2>
+                            <div className="flex items-center">
+                                {currentStepIndex > 0 && (
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        onClick={handleBackStep}
+                                        className="mr-2 h-8 w-8"
+                                        aria-label="Go back"
+                                    >
+                                        <ArrowLeft className="h-4 w-4" />
+                                    </Button>
+                                )}
+                                <h2 className="text-lg font-semibold">
+                                    {steps[currentStepIndex]?.name || 'Generated Content'}
+                                </h2>
+                                {currentStepIndex < steps.length - 1 && (
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        onClick={handleForwardStep}
+                                        className="ml-2 h-8 w-8"
+                                        aria-label="Go forward"
+                                    >
+                                        <ArrowRight className="h-4 w-4" />
+                                    </Button>
+                                )}
+                            </div>
                         </div>
                         <ScrollArea className="flex-1 h-[calc(100vh-5rem)]">
                             <div className="p-4">
@@ -380,12 +452,6 @@ export function WorkflowClient() {
                                         step={steps[currentStepIndex]}
                                         onSubmit={handleStepSubmit}
                                     />
-                                )}
-
-                                {workflowState.status === 'error' && (
-                                    <div className="text-red-500">
-                                        {workflowState.error}
-                                    </div>
                                 )}
                             </div>
                         </ScrollArea>

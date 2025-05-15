@@ -18,9 +18,10 @@ import type { WorkflowResult } from "@/types/workflow"
 type StepEditorProps = {
     step: WorkflowStep;
     onSubmit: (content: string) => void;
+    isHistoricalView?: boolean; // Add this prop
 }
 
-export function StepEditor({ step, onSubmit }: StepEditorProps) {
+export function StepEditor({ step, onSubmit, isHistoricalView = false }: StepEditorProps) {
     const [editedContent, setEditedContent] = useState(step.content)
     const [parsedContent, setParsedContent] = useState<any>(null)
     const [isEditing, setIsEditing] = useState(false)
@@ -78,6 +79,17 @@ export function StepEditor({ step, onSubmit }: StepEditorProps) {
 
     // Determine if this is the final step
     const isFinalStep = step.name === 'Generated Content'
+
+    // For historical views, disable editing
+    if (isHistoricalView) {
+        return (
+            <div className="space-y-4">
+                <div className="bg-muted rounded-lg p-6">
+                    <pre className="whitespace-pre-wrap text-sm">{step.content}</pre>
+                </div>
+            </div>
+        )
+    }
 
     if (step.name === 'Profile Analysis') {
         // Ensure profile data is valid
