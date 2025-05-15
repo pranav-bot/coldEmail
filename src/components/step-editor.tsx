@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Loader2 } from "lucide-react"
 
 type StepEditorProps = {
     step: WorkflowStep;
@@ -21,6 +22,7 @@ export function StepEditor({ step, onSubmit }: StepEditorProps) {
     const [editedContent, setEditedContent] = useState(step.content)
     const [parsedContent, setParsedContent] = useState<any>(null)
     const [isEditing, setIsEditing] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
 
     useEffect(() => {
         if (!step.content) {
@@ -43,6 +45,34 @@ export function StepEditor({ step, onSubmit }: StepEditorProps) {
             setEditedContent(step.content || '')
         }
     }, [step.content])
+
+    const handleSubmit = async (content: string) => {
+        setIsLoading(true)
+        try {
+            await onSubmit(content)
+        } catch (error) {
+            console.error('Error submitting content:', error)
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const ContinueButton = () => (
+        <Button 
+            onClick={() => handleSubmit(editedContent)} 
+            className="w-full"
+            disabled={isLoading}
+        >
+            {isLoading ? (
+                <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                </>
+            ) : (
+                'Continue to Next Step'
+            )}
+        </Button>
+    )
 
     if (step.name === 'Profile Analysis') {
         // Ensure profile data is valid
@@ -237,9 +267,7 @@ export function StepEditor({ step, onSubmit }: StepEditorProps) {
                     </AccordionItem>
                 </Accordion>
 
-                <Button onClick={() => onSubmit(editedContent)} className="w-full">
-                    Continue to Next Step
-                </Button>
+                <ContinueButton />
             </div>
         )
     }
@@ -329,15 +357,23 @@ export function StepEditor({ step, onSubmit }: StepEditorProps) {
                             if (!Array.isArray(parsed)) {
                                 throw new Error('Content must be an array')
                             }
-                            onSubmit(editedContent)
+                            handleSubmit(editedContent)
                         } catch (error) {
                             console.error('Invalid content:', error)
                             // You might want to show an error message to the user here
                         }
                     }} 
                     className="w-full"
+                    disabled={isLoading}
                 >
-                    Continue to Next Step
+                    {isLoading ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing...
+                        </>
+                    ) : (
+                        'Continue to Next Step'
+                    )}
                 </Button>
             </div>
         )
@@ -354,6 +390,7 @@ export function StepEditor({ step, onSubmit }: StepEditorProps) {
                             variant="outline" 
                             size="sm"
                             onClick={() => setIsEditing(true)}
+                            disabled={isLoading}
                         >
                             Edit Intent
                         </Button>
@@ -375,16 +412,25 @@ export function StepEditor({ step, onSubmit }: StepEditorProps) {
                                     setIsEditing(false)
                                     setEditedContent(step.content) // Reset to original content
                                 }}
+                                disabled={isLoading}
                             >
                                 Cancel
                             </Button>
                             <Button 
                                 onClick={() => {
                                     setIsEditing(false)
-                                    onSubmit(editedContent)
+                                    handleSubmit(editedContent)
                                 }}
+                                disabled={isLoading}
                             >
-                                Save Changes
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                        Processing...
+                                    </>
+                                ) : (
+                                    'Save Changes'
+                                )}
                             </Button>
                         </div>
                     </div>
@@ -393,12 +439,7 @@ export function StepEditor({ step, onSubmit }: StepEditorProps) {
                         <div className="bg-muted rounded-lg p-6 text-lg leading-relaxed whitespace-pre-wrap">
                             {editedContent}
                         </div>
-                        <Button 
-                            onClick={() => onSubmit(editedContent)} 
-                            className="w-full"
-                        >
-                            Continue to Next Step
-                        </Button>
+                        <ContinueButton />
                     </div>
                 )}
             </div>
@@ -422,9 +463,7 @@ export function StepEditor({ step, onSubmit }: StepEditorProps) {
                     placeholder={`Enter ${step.name.toLowerCase()}...`}
                 />
             </div>
-            <Button onClick={() => onSubmit(editedContent)} className="w-full">
-                Continue to Next Step
-            </Button>
+            <ContinueButton />
         </div>
     )
 }
