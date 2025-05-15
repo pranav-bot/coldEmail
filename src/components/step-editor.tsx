@@ -12,6 +12,8 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Loader2 } from "lucide-react"
+import { ScrollArea } from "@radix-ui/react-scroll-area"
+import type { WorkflowResult } from "@/types/workflow"
 
 type StepEditorProps = {
     step: WorkflowStep;
@@ -73,6 +75,9 @@ export function StepEditor({ step, onSubmit }: StepEditorProps) {
             )}
         </Button>
     )
+
+    // Determine if this is the final step
+    const isFinalStep = step.name === 'Generated Content'
 
     if (step.name === 'Profile Analysis') {
         // Ensure profile data is valid
@@ -444,6 +449,81 @@ export function StepEditor({ step, onSubmit }: StepEditorProps) {
         )
     }
 
+    if (step.name === 'Generated Content') {
+        const results = Array.isArray(parsedContent) ? parsedContent : [];
+        
+        return (
+            <div className="space-y-4">
+                <ScrollArea className="h-[calc(100vh-8rem)]">
+                    <Accordion type="single" collapsible className="w-full">
+                        {results.map((result: WorkflowResult, index: number) => {
+                            // Validate result object structure
+                            if (!result?.lead?.contactInfo || !result?.emailContent || !result?.linkedInContent) {
+                                return null;
+                            }
+
+                            const { lead, emailContent, linkedInContent } = result;
+
+                            return (
+                                <AccordionItem key={index} value={`result-${index}`}>
+                                    <AccordionTrigger>
+                                        {lead.contactInfo?.name || 'Unnamed Lead'} - {' '}
+                                        {lead.companyInfo?.name || 'Unknown Company'}
+                                    </AccordionTrigger>
+                                    <AccordionContent>
+                                        <div className="space-y-6">
+                                            {/* Lead Information */}
+                                            <div>
+                                                <h4 className="font-medium mb-2">Lead Information</h4>
+                                                <div className="space-y-2 text-sm">
+                                                    <p><span className="font-medium">Name:</span> {lead.contactInfo.name || 'N/A'}</p>
+                                                    <p><span className="font-medium">Email:</span> {lead.contactInfo.email || 'N/A'}</p>
+                                                    <p><span className="font-medium">LinkedIn:</span> {lead.contactInfo.linkedin || 'N/A'}</p>
+                                                    <p><span className="font-medium">Company:</span> {lead.companyInfo?.name || 'N/A'}</p>
+                                                    <p><span className="font-medium">Industry:</span> {lead.companyInfo?.industry || 'N/A'}</p>
+                                                </div>
+                                            </div>
+
+                                            {/* Email Content */}
+                                            <div>
+                                                <h4 className="font-medium mb-2">Email</h4>
+                                                <div className="space-y-2">
+                                                    <div className="bg-muted p-3 rounded">
+                                                        <p className="font-medium">Subject:</p>
+                                                        <p>{emailContent.subject}</p>
+                                                    </div>
+                                                    <div className="bg-muted p-3 rounded">
+                                                        <p className="font-medium">Body:</p>
+                                                        <p className="whitespace-pre-wrap">{emailContent.body}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* LinkedIn Content */}
+                                            <div>
+                                                <h4 className="font-medium mb-2">LinkedIn Message</h4>
+                                                <div className="space-y-2">
+                                                    <div className="bg-muted p-3 rounded">
+                                                        <p className="font-medium">Connection Request:</p>
+                                                        <p>{linkedInContent.intro}</p>
+                                                    </div>
+                                                    <div className="bg-muted p-3 rounded">
+                                                        <p className="font-medium">Follow-up Message:</p>
+                                                        <p className="whitespace-pre-wrap">{linkedInContent.message}</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </AccordionContent>
+                                </AccordionItem>
+                            );
+                        })}
+                    </Accordion>
+                </ScrollArea>
+            </div>
+        );
+    }
+
     // Default editor for Enhanced Intent step
     if (step.name === 'Enhanced Intent') {
         return (
@@ -528,7 +608,7 @@ export function StepEditor({ step, onSubmit }: StepEditorProps) {
                     placeholder={`Enter ${step.name.toLowerCase()}...`}
                 />
             </div>
-            <ContinueButton />
+            {!isFinalStep && <ContinueButton />}
         </div>
     )
 }

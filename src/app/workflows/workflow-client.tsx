@@ -253,7 +253,7 @@ export function WorkflowClient() {
                                 <span className="sr-only">New Workflow</span>
                             </Button>
                         </div>
-                        <ScrollArea className="flex-1">
+                        <ScrollArea className="flex-1 h-[calc(100vh-8rem)]">
                             <div className="p-4 space-y-4">
                                 {workflowHistory.map((workflow) => (
                                     <div
