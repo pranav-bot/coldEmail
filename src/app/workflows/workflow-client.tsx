@@ -160,55 +160,66 @@ export function WorkflowClient() {
 
     const handleStepSubmit = async (stepContent: string) => {
         try {
-            const formData = new FormData();
-            formData.append('userInput', userInput);
-            formData.append('template', selectedTemplate);
-            formData.append('resume', resumeFile!);
-            formData.append('leads', leadsFile!);
-            formData.append('step', steps[currentStepIndex].name);
-            formData.append('stepContent', stepContent);
-            // Add previous step content if it exists
+            // Validate content before submitting
+            if (steps[currentStepIndex].name !== 'Enhanced Intent') {
+                try {
+                    JSON.parse(stepContent) // Validate JSON
+                } catch (error) {
+                    throw new Error('Invalid JSON format')
+                }
+            }
+
+            const formData = new FormData()
+            formData.append('userInput', userInput)
+            formData.append('template', selectedTemplate)
+            formData.append('resume', resumeFile!)
+            formData.append('leads', leadsFile!)
+            formData.append('step', steps[currentStepIndex].name)
+            formData.append('stepContent', stepContent)
+            
             if (currentStepIndex > 0) {
-                formData.append('previousStepContent', steps[currentStepIndex - 1].content);
+                // Ensure previous step content is valid JSON
+                const prevContent = steps[currentStepIndex - 1].content
+                formData.append('previousStepContent', prevContent)
             }
 
             const response = await fetch('/api/workflow/step', {
                 method: 'POST',
                 body: formData
-            });
+            })
 
             if (!response.ok) {
-                const error = await response.json();
-                throw new Error(error.message || 'Failed to process step');
+                const error = await response.json()
+                throw new Error(error.message || 'Failed to process step')
             }
 
-            const result = await response.json();
+            const result = await response.json()
             
             // Update current step status
             setSteps(prev => prev.map((step, idx) => 
                 idx === currentStepIndex 
                     ? { ...step, status: 'complete', content: stepContent }
                     : step
-            ));
+            ))
 
-            // Move to next step
+            // Move to next step if available
             if (currentStepIndex < steps.length - 1) {
-                setCurrentStepIndex(prev => prev + 1);
+                setCurrentStepIndex(prev => prev + 1)
                 setSteps(prev => prev.map((step, idx) => 
                     idx === currentStepIndex + 1 
                         ? { ...step, status: 'editing', content: result.content }
                         : step
-                ));
+                ))
             }
         } catch (error) {
-            console.error('Step processing error:', error);
+            console.error('Step processing error:', error)
             setWorkflowState(prev => ({
                 ...prev,
                 status: 'error',
                 error: error instanceof Error ? error.message : 'Unknown error'
-            }));
+            }))
         }
-    };
+    }
 
     const handleNewWorkflow = () => {
         // Reset the current workflow state

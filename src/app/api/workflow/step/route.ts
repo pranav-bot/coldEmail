@@ -37,8 +37,11 @@ export async function POST(req: Request) {
 
             case 'Profile Analysis':
                 // Move to lead analysis
+                const tempLeadsPath = join(tmpdir(), `leads-${Date.now()}.csv`)
+                await writeFile(tempLeadsPath, Buffer.from(await leadsFile.arrayBuffer()))
+                
                 const leads = await leadAnalysis(
-                    await leadsFile.arrayBuffer(),
+                    tempLeadsPath,  // Pass the temporary file path instead of ArrayBuffer
                     template,
                     gemini.chat('gemini-1.5-flash')
                 )
@@ -54,30 +57,43 @@ export async function POST(req: Request) {
                     throw new Error('Previous step content is required')
                 }
 
-                const results = await Promise.all(
-                    analyzedLeads.map(async (lead: any) => {
-                        const emailContent = await writeEmail(
-                            lead,
-                            analyzedProfile,
-                            template,
-                            gemini.chat('gemini-1.5-flash')
-                        )
+                // Validate that analyzedLeads is an array
+                if (!Array.isArray(analyzedLeads)) {
+                    throw new Error('Lead Analysis data must be an array')
+                }
 
-                        const linkedInContent = await writeLinkedInMessage(
-                            lead,
-                            analyzedProfile,
-                            template,
-                            gemini.chat('gemini-1.5-flash')
-                        )
+                try {
+                    const results = await Promise.all(
+                        analyzedLeads.map(async (lead: any) => {
+                            if (!lead || typeof lead !== 'object') {
+                                throw new Error('Invalid lead object')
+                            }
 
-                        return {
-                            lead,
-                            emailContent,
-                            linkedInContent
-                        }
-                    })
-                )
-                content = JSON.stringify(results, null, 2)
+                            const emailContent = await writeEmail(
+                                lead,
+                                analyzedProfile,
+                                template,
+                                gemini.chat('gemini-1.5-flash')
+                            )
+
+                            const linkedInContent = await writeLinkedInMessage(
+                                lead,
+                                analyzedProfile,
+                                template,
+                                gemini.chat('gemini-1.5-flash')
+                            )
+
+                            return {
+                                lead,
+                                emailContent,
+                                linkedInContent
+                            }
+                        })
+                    )
+                    content = JSON.stringify(results, null, 2)
+                } catch (error) {
+                    throw new Error(`Failed to process leads: ${error instanceof Error ? error.message : 'Unknown error'}`)
+                }
                 break
 
             default:
