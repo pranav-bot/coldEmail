@@ -273,108 +273,173 @@ export function StepEditor({ step, onSubmit }: StepEditorProps) {
     }
 
     if (step.name === 'Lead Analysis') {
-        // Ensure leads data is valid
         const leads = Array.isArray(parsedContent) ? parsedContent : []
         
         return (
             <div className="space-y-4">
-                {leads.length === 0 ? (
-                    <div className="text-center p-4 text-muted-foreground">
-                        No leads available or invalid data format
-                    </div>
-                ) : (
-                    <Accordion type="single" collapsible className="w-full">
-                        {leads.map((lead: any, index: number) => {
-                            // Validate lead object structure
-                            if (!lead?.contactInfo?.name || !lead?.companyInfo?.name) {
-                                return null;
-                            }
-                            
-                            return (
-                                <AccordionItem key={index} value={`lead-${index}`}>
-                                    <AccordionTrigger>
-                                        {lead.contactInfo.name} - {lead.companyInfo.name}
-                                    </AccordionTrigger>
-                                    <AccordionContent>
-                                        <div className="space-y-3">
-                                            <div>
-                                                <div className="font-medium">Contact Information</div>
-                                                <div className="text-sm">
-                                                    <div>{lead.contactInfo.title}</div>
-                                                    <div>{lead.contactInfo.email}</div>
-                                                    <div>{lead.contactInfo.linkedin}</div>
-                                                </div>
-                                            </div>
+                <Accordion type="single" collapsible className="w-full">
+                    {leads.map((lead: any, index: number) => (
+                        <AccordionItem key={index} value={`lead-${index}`}>
+                            <AccordionTrigger>
+                                {lead.contactInfo?.name || 'Unnamed Lead'} - {lead.companyInfo?.name || 'Unknown Company'}
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                <div className="space-y-4">
+                                    {/* Contact Information */}
+                                    <div>
+                                        <h4 className="font-medium mb-2">Contact Information</h4>
+                                        <div className="space-y-2">
+                                            <Input
+                                                value={lead.contactInfo?.name || ''}
+                                                onChange={(e) => {
+                                                    const updatedLeads = [...leads]
+                                                    if (!updatedLeads[index].contactInfo) {
+                                                        updatedLeads[index].contactInfo = {}
+                                                    }
+                                                    updatedLeads[index].contactInfo.name = e.target.value
+                                                    setEditedContent(JSON.stringify(updatedLeads, null, 2))
+                                                }}
+                                                placeholder="Name"
+                                            />
+                                            <Input
+                                                value={lead.contactInfo?.email || ''}
+                                                onChange={(e) => {
+                                                    const updatedLeads = [...leads]
+                                                    if (!updatedLeads[index].contactInfo) {
+                                                        updatedLeads[index].contactInfo = {}
+                                                    }
+                                                    updatedLeads[index].contactInfo.email = e.target.value
+                                                    setEditedContent(JSON.stringify(updatedLeads, null, 2))
+                                                }}
+                                                placeholder="Email"
+                                            />
+                                            <Input
+                                                value={lead.contactInfo?.linkedin || ''}
+                                                onChange={(e) => {
+                                                    const updatedLeads = [...leads]
+                                                    if (!updatedLeads[index].contactInfo) {
+                                                        updatedLeads[index].contactInfo = {}
+                                                    }
+                                                    updatedLeads[index].contactInfo.linkedin = e.target.value
+                                                    setEditedContent(JSON.stringify(updatedLeads, null, 2))
+                                                }}
+                                                placeholder="LinkedIn URL"
+                                            />
+                                        </div>
+                                    </div>
 
-                                            <div>
-                                                <div className="font-medium">Company Details</div>
-                                                <div className="text-sm">
-                                                    <div>Industry: {lead.companyInfo.industry}</div>
-                                                    <div>Size: {lead.companyInfo.size}</div>
-                                                    <div>Location: {lead.companyInfo.location}</div>
-                                                </div>
-                                            </div>
+                                    {/* Company Information */}
+                                    <div>
+                                        <h4 className="font-medium mb-2">Company Information</h4>
+                                        <div className="space-y-2">
+                                            <Input
+                                                value={lead.companyInfo?.name || ''}
+                                                onChange={(e) => {
+                                                    const updatedLeads = [...leads]
+                                                    if (!updatedLeads[index].companyInfo) {
+                                                        updatedLeads[index].companyInfo = {}
+                                                    }
+                                                    updatedLeads[index].companyInfo.name = e.target.value
+                                                    setEditedContent(JSON.stringify(updatedLeads, null, 2))
+                                                }}
+                                                placeholder="Company Name"
+                                            />
+                                            <Input
+                                                value={lead.companyInfo?.industry || ''}
+                                                onChange={(e) => {
+                                                    const updatedLeads = [...leads]
+                                                    if (!updatedLeads[index].companyInfo) {
+                                                        updatedLeads[index].companyInfo = {}
+                                                    }
+                                                    updatedLeads[index].companyInfo.industry = e.target.value
+                                                    setEditedContent(JSON.stringify(updatedLeads, null, 2))
+                                                }}
+                                                placeholder="Industry"
+                                            />
+                                        </div>
+                                    </div>
 
-                                            <div>
-                                                <div className="font-medium">Relevance</div>
-                                                <div className="text-sm space-y-1">
-                                                    {lead.leadDetails.relevance.jobSearch && (
-                                                        <>
-                                                            <div>Role Match: {lead.leadDetails.relevance.jobSearch.roleMatch}</div>
-                                                            <div>Industry Match: {lead.leadDetails.relevance.jobSearch.industryMatch}</div>
-                                                            <div>Experience Match: {lead.leadDetails.relevance.jobSearch.experienceMatch}</div>
-                                                        </>
-                                                    )}
-                                                    {lead.leadDetails.relevance.sales && (
-                                                        <>
-                                                            <div>Product Fit: {lead.leadDetails.relevance.sales.productFit}</div>
-                                                            <div>Market Segment: {lead.leadDetails.relevance.sales.marketSegment}</div>
-                                                            <div>Budget Alignment: {lead.leadDetails.relevance.sales.budgetAlignment}</div>
-                                                        </>
-                                                    )}
+                                    {/* Lead Details */}
+                                    <div>
+                                        <h4 className="font-medium mb-2">Lead Details</h4>
+                                        <div className="space-y-2">
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <label className="text-sm font-medium">Pain Points</label>
+                                                    <div className="flex flex-wrap gap-2 mb-2">
+                                                        {lead.leadDetails?.painPoints?.map((point: string, i: number) => (
+                                                            <Badge key={i} variant="secondary" className="group">
+                                                                {point}
+                                                                <button
+                                                                    className="ml-2 opacity-0 group-hover:opacity-100"
+                                                                    onClick={() => {
+                                                                        const updatedLeads = [...leads]
+                                                                        updatedLeads[index].leadDetails.painPoints.splice(i, 1)
+                                                                        setEditedContent(JSON.stringify(updatedLeads, null, 2))
+                                                                    }}
+                                                                >
+                                                                    ×
+                                                                </button>
+                                                            </Badge>
+                                                        ))}
+                                                    </div>
+                                                    <Input
+                                                        placeholder="Add pain point"
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter' && e.currentTarget.value) {
+                                                                const updatedLeads = [...leads]
+                                                                if (!updatedLeads[index].leadDetails) {
+                                                                    updatedLeads[index].leadDetails = {}
+                                                                }
+                                                                if (!updatedLeads[index].leadDetails.painPoints) {
+                                                                    updatedLeads[index].leadDetails.painPoints = []
+                                                                }
+                                                                updatedLeads[index].leadDetails.painPoints.push(e.currentTarget.value)
+                                                                setEditedContent(JSON.stringify(updatedLeads, null, 2))
+                                                                e.currentTarget.value = ''
+                                                            }
+                                                        }}
+                                                    />
                                                 </div>
                                             </div>
                                         </div>
-                                    </AccordionContent>
-                                </AccordionItem>
-                            );
-                        })}
-                    </Accordion>
-                )}
-                
-                <Textarea
-                    value={editedContent}
-                    onChange={(e) => setEditedContent(e.target.value)}
-                    className="min-h-[200px] font-mono mt-4"
-                    placeholder="Edit lead data..."
-                />
-                
-                <Button 
+                                    </div>
+
+                                    {/* Remove Lead Button */}
+                                    <Button 
+                                        variant="destructive" 
+                                        size="sm"
+                                        onClick={() => {
+                                            const updatedLeads = [...leads]
+                                            updatedLeads.splice(index, 1)
+                                            setEditedContent(JSON.stringify(updatedLeads, null, 2))
+                                        }}
+                                    >
+                                        Remove Lead
+                                    </Button>
+                                </div>
+                            </AccordionContent>
+                        </AccordionItem>
+                    ))}
+                </Accordion>
+
+                {/* Add New Lead Button */}
+                <Button
                     onClick={() => {
-                        try {
-                            // Validate the edited content is valid JSON array
-                            const parsed = JSON.parse(editedContent)
-                            if (!Array.isArray(parsed)) {
-                                throw new Error('Content must be an array')
-                            }
-                            handleSubmit(editedContent)
-                        } catch (error) {
-                            console.error('Invalid content:', error)
-                            // You might want to show an error message to the user here
+                        const newLead = {
+                            contactInfo: { name: '', email: '', linkedin: '' },
+                            companyInfo: { name: '', industry: '' },
+                            leadDetails: { painPoints: [] }
                         }
-                    }} 
-                    className="w-full"
-                    disabled={isLoading}
+                        const updatedLeads = [...leads, newLead]
+                        setEditedContent(JSON.stringify(updatedLeads, null, 2))
+                    }}
+                    className="w-full mt-4"
                 >
-                    {isLoading ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Processing...
-                        </>
-                    ) : (
-                        'Continue to Next Step'
-                    )}
+                    Add New Lead
                 </Button>
+
+                <ContinueButton />
             </div>
         )
     }
