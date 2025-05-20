@@ -107,7 +107,73 @@ type FreelanceProfile = {
     };
 };
 
-export type { JobProfile, FreelanceProfile };
+type FundingProfile = {
+    startupInfo: {
+        name: string;
+        tagline: string;
+        stage: string; // e.g., seed, series A, etc.
+        foundingDate: string;
+        location: string;
+    };
+    summary: string;
+    vision: string;
+    problem: {
+        description: string;
+        marketSize: string;
+        targetCustomers: string[];
+    };
+    solution: {
+        value: string;
+        uniqueness: string;
+        techDetails: string;
+    };
+    traction: {
+        metrics: Record<string, string>; // e.g., users: "10,000", revenue: "$50k MRR"
+        growth: string;
+        milestones: string[];
+    };
+    businessModel: {
+        revenueStreams: string[];
+        pricing: string;
+        customerAcquisition: string;
+    };
+    market: {
+        size: string;
+        trends: string[];
+        competition: string[];
+    };
+    team: Array<{
+        name: string;
+        role: string;
+        background: string;
+    }>;
+    financials: {
+        currentRunway: string;
+        pastFunding: string;
+        projections: string;
+    };
+    ask: {
+        amount: string;
+        use: string[];
+        timeline: string;
+    };
+    intent: string;
+    targetInvestors: string[];
+    pitchStrategy: {
+        hook: string;
+        keyPoints: string[];
+        valueProposition: string;
+        proofPoints: string[];
+        callToAction: string;
+    };
+    communicationStyle: {
+        tone: string;
+        persuasionTactics: string[];
+        objectionHandling: string[];
+    };
+};
+
+export type { JobProfile, FreelanceProfile, FundingProfile };
 
 const jobSearchAdditionalInfoSchema = z.object({
     targetRoles: z.array(z.string()),
@@ -143,6 +209,26 @@ const freelanceAdditionalInfoSchema = z.object({
         valueProposition: z.string(),
         objectionHandling: z.array(z.string()),
         callToAction: z.string()
+    }),
+});
+
+const fundingAdditionalInfoSchema = z.object({
+    targetInvestors: z.array(z.string()),
+    investorFit: z.array(z.string()),
+    fundingGoals: z.array(z.string()),
+    marketOpportunity: z.string(),
+    additionalConsiderations: z.record(z.string()).optional(),
+    pitchStrategy: z.object({
+        hook: z.string(),
+        keyPoints: z.array(z.string()),
+        valueProposition: z.string(),
+        proofPoints: z.array(z.string()),
+        callToAction: z.string()
+    }),
+    communicationStyle: z.object({
+        tone: z.string(),
+        persuasionTactics: z.array(z.string()),
+        objectionHandling: z.array(z.string())
     }),
     positioning: z.object({
         uniqueValue: z.string(),
@@ -223,10 +309,52 @@ const buildProfile = async (
        - Market gaps the product/service fills
        - Success stories and case studies to reference
     `;
+    
+    const fundingPrompt = `
+    You are an expert startup advisor and investor pitch strategist. Your task is to build a comprehensive funding profile that will be used to write effective cold emails for pitching to potential investors.
+
+    Funding Intent: "${userIntent}"
+
+    Pitch Deck/Business Plan Analysis:
+    ${JSON.stringify(content, null, 2)}
+
+    Please analyze this information and provide a comprehensive profile that includes:
+
+    1. Investor Targeting:
+       - Types of investors that would be ideal for this startup
+       - Why these investors would be a good fit
+       - Specific funding goals and timeline
+       - Market opportunity that will attract investors
+       - Any additional considerations for investor outreach
+
+    2. Pitch Strategy (for cold emails):
+       - Compelling hook that grabs attention
+       - Key points to highlight in initial outreach
+       - Value proposition that resonates with investors
+       - Proof points that demonstrate traction and potential
+       - Effective call to action for next steps
+
+    3. Communication Style:
+       - Professional tone appropriate for investor outreach
+       - Persuasion tactics that work well with investors
+       - Common objections investors might have and how to address them
+    `;
 
     try {
-        const prompt = template === Template.JobSearch ? jobSearchPrompt : freelancePrompt;
-        const schema = template === Template.JobSearch ? jobSearchAdditionalInfoSchema : freelanceAdditionalInfoSchema;
+        let prompt;
+        let schema;
+        
+        if (template === Template.JobSearch) {
+            prompt = jobSearchPrompt;
+            schema = jobSearchAdditionalInfoSchema;
+        } else if (template === Template.Freelance) {
+            prompt = freelancePrompt;
+            schema = freelanceAdditionalInfoSchema;
+        } else {
+            // Funding template
+            prompt = fundingPrompt;
+            schema = fundingAdditionalInfoSchema;
+        }
 
         // Use generateObject instead of generateText
         const result = await generateObject({
@@ -247,7 +375,7 @@ const buildProfile = async (
                 communicationStyle: result.object.communicationStyle,
                 personalBranding: result.object.personalBranding
             };
-        } else {
+        } else if (template === Template.Freelance) {
             return {
                 ...(content as FreelanceProfile),
                 intent: userIntent,
@@ -260,6 +388,18 @@ const buildProfile = async (
                 },
                 communicationStrategy: result.object.communicationStrategy,
                 positioning: result.object.positioning
+            };
+        } else {
+            // Funding template
+            return {
+                ...(content as FundingProfile),
+                intent: userIntent,
+                targetInvestors: result.object.targetInvestors,
+                investorFit: result.object.investorFit,
+                fundingGoals: result.object.fundingGoals,
+                marketOpportunity: result.object.marketOpportunity,
+                pitchStrategy: result.object.pitchStrategy,
+                communicationStyle: result.object.communicationStyle
             };
         }
     } catch (error) {

@@ -2,7 +2,7 @@ import type { LanguageModelV1 } from "ai";
 import { Template } from "./enums";
 import { generateText } from "ai";
 import type { Lead } from "./leadAnalysis";
-import type { JobProfile, FreelanceProfile } from "./buildProfile";
+import type { JobProfile, FreelanceProfile, FundingProfile } from "./buildProfile";
 
 type EmailContent = {
     subject: string;
@@ -72,6 +72,34 @@ Format the response as a JSON object with these fields:
 }
 `;
 
+const getFundingEmailPrompt = (lead: Lead, profile: FundingProfile) => `
+You are an expert startup founder and investor pitch strategist. Your task is to write a compelling cold email that will get a response from a potential investor (VC, angel, etc).
+
+Lead (Investor) Information:
+${JSON.stringify(lead, null, 2)}
+
+Startup Funding Profile:
+${JSON.stringify(profile, null, 2)}
+
+Please write a cold email that:
+1. Has a subject line that grabs attention and signals a high-potential opportunity
+2. Opens with a personalized hook based on the investor's focus or portfolio
+3. Clearly states the startup's vision and the problem being solved
+4. Highlights traction, market opportunity, and why now is the right time
+5. Explains what makes the team and solution unique
+6. Specifies the funding ask and what it will be used for
+7. Includes proof points (metrics, growth, notable backers, etc)
+8. Has a strong, specific call to action (e.g., "15-min intro call")
+9. Is concise, confident, and tailored to the investor
+
+Format the response as a JSON object with these fields:
+{
+    "subject": "Compelling subject line here",
+    "body": "Well-crafted email body here",
+    "to": ""
+}
+`;
+
 // LinkedIn prompts
 const getJobSearchLinkedInPrompt = (lead: Lead, profile: JobProfile) => `
 You are an expert LinkedIn outreach strategist for job seekers. Your task is to write a concise, engaging LinkedIn message sequence to connect with the hiring manager or recruiter.
@@ -129,15 +157,48 @@ Format the response as a JSON object with these fields:
 }
 `;
 
+const getFundingLinkedInPrompt = (lead: Lead, profile: FundingProfile) => `
+You are an expert LinkedIn outreach strategist for startup founders. Your task is to write a concise, engaging LinkedIn message sequence to connect with a potential investor.
+
+Lead LinkedIn:
+${lead.contactInfo.linkedin ?? ""}
+
+Lead (Investor) Information:
+${JSON.stringify(lead, null, 2)}
+
+Startup Funding Profile:
+${JSON.stringify(profile, null, 2)}
+
+Please provide:
+1. A short connection request introduction (max 300 characters) that references the investor's interests or portfolio
+2. A follow-up LinkedIn message (max 500 characters) that:
+- References the connection
+- States the startup's vision and traction
+- Explains why the investor is a great fit
+- Includes a clear, non-pushy call to action (e.g., "Would love to share more if you're open!")
+
+Format the response as a JSON object with these fields:
+{
+    "intro": "Connection request here",
+    "message": "Follow-up message here",
+    "to": ""
+}
+`;
+
 export const writeEmail = async (
     lead: Lead,
-    profile: JobProfile | FreelanceProfile,
+    profile: JobProfile | FreelanceProfile | FundingProfile,
     template: Template,
     model: LanguageModelV1
 ): Promise<EmailContent> => {
-    const prompt = template === Template.JobSearch 
-        ? getJobSearchEmailPrompt(lead, profile as JobProfile)
-        : getFreelanceEmailPrompt(lead, profile as FreelanceProfile);
+    let prompt;
+    if (template === Template.JobSearch) {
+        prompt = getJobSearchEmailPrompt(lead, profile as JobProfile);
+    } else if (template === Template.Freelance) {
+        prompt = getFreelanceEmailPrompt(lead, profile as FreelanceProfile);
+    } else {
+        prompt = getFundingEmailPrompt(lead, profile as FundingProfile);
+    }
 
     try {
         const result = await generateText({ model, prompt });
@@ -169,13 +230,18 @@ export const writeEmail = async (
 
 export const writeLinkedInMessage = async (
     lead: Lead,
-    profile: JobProfile | FreelanceProfile,
+    profile: JobProfile | FreelanceProfile | FundingProfile,
     template: Template,
     model: LanguageModelV1
 ): Promise<LinkedInContent> => {
-    const prompt = template === Template.JobSearch
-        ? getJobSearchLinkedInPrompt(lead, profile as JobProfile)
-        : getFreelanceLinkedInPrompt(lead, profile as FreelanceProfile);
+    let prompt;
+    if (template === Template.JobSearch) {
+        prompt = getJobSearchLinkedInPrompt(lead, profile as JobProfile);
+    } else if (template === Template.Freelance) {
+        prompt = getFreelanceLinkedInPrompt(lead, profile as FreelanceProfile);
+    } else {
+        prompt = getFundingLinkedInPrompt(lead, profile as FundingProfile);
+    }
 
     try {
         const result = await generateText({ model, prompt });

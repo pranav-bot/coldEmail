@@ -348,13 +348,18 @@ export function WorkflowClient() {
                                     <SelectContent>
                                         <SelectItem value={Template.JobSearch}>Job Search</SelectItem>
                                         <SelectItem value={Template.Freelance}>Freelance</SelectItem>
+                                        <SelectItem value={Template.Funding}>Startup Funding</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                             <div className="space-y-4 mt-4">
                                 <div>
                                     <label className="block text-sm font-medium mb-1">
-                                        {selectedTemplate === Template.JobSearch ? 'Resume File' : 'Content File'}
+                                        {selectedTemplate === Template.JobSearch 
+                                            ? 'Resume File' 
+                                            : selectedTemplate === Template.Funding 
+                                                ? 'Pitch Deck/Business Plan' 
+                                                : 'Content File'}
                                     </label>
                                     <Input
                                         type="file"

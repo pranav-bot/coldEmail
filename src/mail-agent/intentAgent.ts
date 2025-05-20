@@ -36,7 +36,31 @@ const intentAgent = async (userPrompt: string, template: Template, model: Langua
     Your response should be a natural, well-structured paragraph that captures their freelance service offering in a compelling way.
     `;
 
-    const prompt = template === Template.JobSearch ? jobSearchPrompt : freelancePrompt;
+    const fundingPrompt = `
+    You are an expert startup advisor and investor pitch assistant. Your task is to understand and enhance the founder's funding intent to create more effective investor outreach.
+
+    Original User Prompt: "${userPrompt}"
+
+    Please analyze the founder's intent and provide an enhanced version that:
+    1. Maintains their core vision, funding goals, and startup story
+    2. Adds relevant traction, market opportunity, and team strengths
+    3. Clarifies the funding ask, use of funds, and investor fit
+    4. Structures their thoughts in a clear, compelling, and professional manner
+    5. Emphasizes the unique value proposition and why now is the right time
+    6. Includes any implicit but important details for investors
+
+    Focus on understanding their true intent and enhancing it, rather than just extracting information.
+    Your response should be a natural, well-structured paragraph that captures their funding story in a compelling way.
+    `;
+
+    let prompt;
+    if (template === Template.JobSearch) {
+        prompt = jobSearchPrompt;
+    } else if (template === Template.Freelance) {
+        prompt = freelancePrompt;
+    } else {
+        prompt = fundingPrompt;
+    }
 
     try {
         const result = await generateText({
