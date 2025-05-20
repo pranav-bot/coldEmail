@@ -18,7 +18,6 @@ import {
     SelectValue,
 } from "@/components/ui/select"
 import { StepEditor } from "@/components/step-editor"
-import { ThemeToggle } from "@/components/theme-toggle"
 
 type WorkflowStep = {
     name: string;
@@ -290,18 +289,15 @@ export function WorkflowClient() {
                     <div className="flex h-full flex-col">
                         <div className="p-4 border-b flex justify-between items-center">
                             <h2 className="text-lg font-semibold">History</h2>
-                            <div className="flex items-center gap-2">
-                                <ThemeToggle />
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={handleNewWorkflow}
-                                    className="h-8 w-8"
-                                >
-                                    <Plus className="h-4 w-4" />
-                                    <span className="sr-only">New Workflow</span>
-                                </Button>
-                            </div>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={handleNewWorkflow}
+                                className="h-8 w-8"
+                            >
+                                <Plus className="h-4 w-4" />
+                                <span className="sr-only">New Workflow</span>
+                            </Button>
                         </div>
                         <ScrollArea className="flex-1 h-[calc(100vh-8rem)]">
                             <div className="p-4 space-y-4">
@@ -415,34 +411,32 @@ export function WorkflowClient() {
                 <ResizablePanel defaultSize={45}>
                     <div className="flex h-full flex-col overflow-hidden">
                         <div className="p-4 border-b">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center">
-                                    {currentStepIndex > 0 && (
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            onClick={handleBackStep}
-                                            className="mr-2 h-8 w-8"
-                                            aria-label="Go back"
-                                        >
-                                            <ArrowLeft className="h-4 w-4" />
-                                        </Button>
-                                    )}
-                                    <h2 className="text-lg font-semibold">
-                                        {steps[currentStepIndex]?.name || 'Generated Content'}
-                                    </h2>
-                                    {currentStepIndex < steps.length - 1 && (
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            onClick={handleForwardStep}
-                                            className="ml-2 h-8 w-8"
-                                            aria-label="Go forward"
-                                        >
-                                            <ArrowRight className="h-4 w-4" />
-                                        </Button>
-                                    )}
-                                </div>
+                            <div className="flex items-center">
+                                {currentStepIndex > 0 && (
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        onClick={handleBackStep}
+                                        className="mr-2 h-8 w-8"
+                                        aria-label="Go back"
+                                    >
+                                        <ArrowLeft className="h-4 w-4" />
+                                    </Button>
+                                )}
+                                <h2 className="text-lg font-semibold">
+                                    {steps[currentStepIndex]?.name || 'Generated Content'}
+                                </h2>
+                                {currentStepIndex < steps.length - 1 && (
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        onClick={handleForwardStep}
+                                        className="ml-2 h-8 w-8"
+                                        aria-label="Go forward"
+                                    >
+                                        <ArrowRight className="h-4 w-4" />
+                                    </Button>
+                                )}
                             </div>
                         </div>
                         <ScrollArea className="flex-1 h-[calc(100vh-5rem)]">
