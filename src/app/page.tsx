@@ -3,8 +3,12 @@ import { ArrowRight, Mail } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import LinkAccountButton from "@/components/ui/link-account-button"
+import { auth } from "@clerk/nextjs/server"
 
 export default async function Home() {
+  const { userId } = await auth()
+  
+  // No redirect needed - we show different content based on auth status
   return (
     <div className="flex flex-col min-h-screen">
       {/* Navigation */}
@@ -15,12 +19,25 @@ export default async function Home() {
             <span className="font-bold">ColdMail AI</span>
           </div>
           <div className="flex items-center space-x-4">
-            <Link href="/sign-in">
-              <Button variant="ghost">Sign In</Button>
-            </Link>
-            <Link href="/sign-up">
-              <Button>Get Started</Button>
-            </Link>
+            {userId ? (
+              <>
+                <Link href="/workflows">
+                  <Button variant="ghost">Go to Workflows</Button>
+                </Link>
+                <Link href="/sign-out">
+                  <Button variant="outline">Sign Out</Button>
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link href="/sign-in">
+                  <Button variant="ghost">Sign In</Button>
+                </Link>
+                <Link href="/sign-up">
+                  <Button>Get Started</Button>
+                </Link>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -37,12 +54,22 @@ export default async function Home() {
               Powered by advanced AI to help you connect with the right leads.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
-              <Link href="/sign-up">
-                <Button size="lg" className="w-full sm:w-auto">
-                  Start Free Trial <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </Link>
-              {/* <LinkAccountButton  /> */}
+              {userId ? (
+                <Link href="/workflows">
+                  <Button size="lg" className="w-full sm:w-auto">
+                    Go to Workflows <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                </Link>
+              ) : (
+                <>
+                  <Link href="/sign-up">
+                    <Button size="lg" className="w-full sm:w-auto">
+                      Start Free Trial <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                  {/* <LinkAccountButton className="w-full sm:w-auto" /> */}
+                </>
+              )}
             </div>
           </div>
           <div className="relative mx-auto max-w-5xl">
