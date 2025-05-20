@@ -41,48 +41,56 @@ type JobProfile = {
     };
 };
 
-type SalesProfile = {
-    productInfo: {
-        name: string;
-        description: string;
-        features: string[];
-        specifications: Record<string, string>;
-    };
-    targetAudience: {
+type FreelanceProfile = {
+    personalInfo: string;
+    summary: string;
+    servicesOffered: {
         primary: string;
-        secondary: string;
-        useCases: string[];
+        secondary: string[];
+        description: string;
     };
-    keyBenefits: string[];
+    expertise: {
+        skills: string[];
+        specializations: string[];
+        tools: string[];
+        yearsExperience: string;
+    };
+    portfolioHighlights: Array<{
+        projectName: string;
+        clientName?: string;
+        description: string;
+        outcomes: string[];
+    }>;
+    clientBenefits: string[];
     uniqueSellingPoints: string[];
     pricingInfo: {
-        price: string;
+        rateStructure: string;
         valueProposition: string;
         roi: string;
     };
     marketContext: {
         industry: string;
-        position: string;
+        targetClients: string[];
         trends: string[];
     };
-    technicalDetails: {
-        specifications: Record<string, string>;
-        requirements: string[];
-        compatibility: string[];
+    processOverview: {
+        workflow: string[];
+        timeline: string;
+        deliverables: string[];
     };
     socialProof: {
         testimonials: string[];
         caseStudies: string[];
-        statistics: Record<string, string>;
+        results: Record<string, string>;
     };
     callToAction: {
         nextSteps: string[];
         contactInfo: string;
     };
     intent: string;
-    targetMarkets: string[];
+    targetClients: string[];
     competitiveAdvantages: string[];
-    salesObjectives: string[];
+    businessObjectives: string[];
     communicationStrategy: {
         tone: string;
         keyMessages: string[];
@@ -94,12 +102,12 @@ type SalesProfile = {
     positioning: {
         uniqueValue: string;
         differentiators: string[];
-        marketGaps: string[];
+        marketNiche: string[];
         successStories: string[];
     };
 };
 
-export type { JobProfile, SalesProfile };
+export type { JobProfile, FreelanceProfile };
 
 const jobSearchAdditionalInfoSchema = z.object({
     targetRoles: z.array(z.string()),
@@ -122,10 +130,10 @@ const jobSearchAdditionalInfoSchema = z.object({
     })
 });
 
-const salesAdditionalInfoSchema = z.object({
-    targetMarkets: z.array(z.string()),
+const freelanceAdditionalInfoSchema = z.object({
+    targetClients: z.array(z.string()),
     competitiveAdvantages: z.array(z.string()),
-    salesObjectives: z.array(z.string()),
+    businessObjectives: z.array(z.string()),
     marketPositioning: z.string(),
     additionalConsiderations: z.record(z.string()).optional(),
     communicationStrategy: z.object({
@@ -139,7 +147,7 @@ const salesAdditionalInfoSchema = z.object({
     positioning: z.object({
         uniqueValue: z.string(),
         differentiators: z.array(z.string()),
-        marketGaps: z.array(z.string()),
+        marketNiche: z.array(z.string()),
         successStories: z.array(z.string())
     })
 });
@@ -149,7 +157,7 @@ const buildProfile = async (
     file: string,
     template: Template,
     model: LanguageModelV1
-): Promise<JobProfile | SalesProfile> => {
+): Promise<JobProfile | FreelanceProfile> => {
     // First analyze the content
     const content = await contentAnalyzer(file, template, model);
 
@@ -184,10 +192,10 @@ const buildProfile = async (
        - Notable achievements to highlight
     `;
 
-    const salesPrompt = `
-    You are an expert sales strategist and communication specialist. Your task is to build a comprehensive sales profile that will be used to write effective cold emails for product/service promotion.
+    const freelancePrompt = `
+    You are an expert freelance consultant and pitch strategist. Your task is to build a comprehensive freelancer profile that will be used to write effective cold emails for pitching services to potential clients.
 
-    Sales Intent: "${userIntent}"
+    Freelance Intent: "${userIntent}"
 
     Content Analysis:
     ${JSON.stringify(content, null, 2)}
@@ -217,8 +225,8 @@ const buildProfile = async (
     `;
 
     try {
-        const prompt = template === Template.JobSearch ? jobSearchPrompt : salesPrompt;
-        const schema = template === Template.JobSearch ? jobSearchAdditionalInfoSchema : salesAdditionalInfoSchema;
+        const prompt = template === Template.JobSearch ? jobSearchPrompt : freelancePrompt;
+        const schema = template === Template.JobSearch ? jobSearchAdditionalInfoSchema : freelanceAdditionalInfoSchema;
 
         // Use generateObject instead of generateText
         const result = await generateObject({
@@ -241,13 +249,13 @@ const buildProfile = async (
             };
         } else {
             return {
-                ...(content as SalesProfile),
+                ...(content as FreelanceProfile),
                 intent: userIntent,
-                targetMarkets: Array.isArray(result.object.targetMarkets) ? result.object.targetMarkets : [],
+                targetClients: result.object.targetClients,
                 competitiveAdvantages: result.object.competitiveAdvantages,
-                salesObjectives: result.object.salesObjectives,
+                businessObjectives: result.object.businessObjectives,
                 marketContext: {
-                    ...(content as SalesProfile).marketContext,
+                    ...(content as FreelanceProfile).marketContext,
                     position: result.object.marketPositioning
                 },
                 communicationStrategy: result.object.communicationStrategy,

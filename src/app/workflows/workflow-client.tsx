@@ -347,7 +347,7 @@ export function WorkflowClient() {
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value={Template.JobSearch}>Job Search</SelectItem>
-                                        <SelectItem value={Template.Sales}>Sales</SelectItem>
+                                        <SelectItem value={Template.Freelance}>Freelance</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

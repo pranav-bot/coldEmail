@@ -4,7 +4,7 @@ import { Template } from './enums';
 import leadAnalysis from './leadAnalysis';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import buildProfile, { type JobProfile, type SalesProfile } from './buildProfile';
+import buildProfile, { type JobProfile, type FreelanceProfile } from './buildProfile';
 import { writeEmail, writeLinkedInMessage } from './mailWriter';
 
 // Get the directory path in ES modules
@@ -21,7 +21,7 @@ const user_intent = await intentAgent(userInput, Template.JobSearch, gemini.chat
     return ""; // Provide a fallback value in case of error
 });
 
-const profile: Promise<string | JobProfile | SalesProfile> = buildProfile(user_intent, 'src/mail-agent/PranavAdvaniResume.pdf', Template.JobSearch, gemini.chat('gemini-1.5-flash')).then((result) => {
+const profile: Promise<string | JobProfile | FreelanceProfile> = buildProfile(user_intent, 'src/mail-agent/PranavAdvaniResume.pdf', Template.JobSearch, gemini.chat('gemini-1.5-flash')).then((result) => {
     console.log(result);
     return result;
 }).catch((error) => {

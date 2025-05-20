@@ -155,8 +155,8 @@ Important Guidelines:
   * Consider company culture and growth potential
 `;
 
-const getSalesPrompt = (content: ParsedContent) => `
-You are an expert sales lead analyst. Your task is to analyze the provided lead data and extract comprehensive information about each potential customer or sales opportunity.
+const getFreelancePrompt = (content: ParsedContent) => `
+You are an expert freelancer client analyst. Your task is to analyze the provided lead data and extract comprehensive information about each potential client for freelance services.
 
 Lead Data:
 ${JSON.stringify(content, null, 2)}
@@ -165,10 +165,10 @@ Please analyze this data and extract detailed information for each lead, includi
 1. Contact Information (name, email, phone, title, company, LinkedIn)
 2. Company Information (name, industry, size, location, website)
 3. Lead Details (source, status, interest level, pain points, needs, budget, timeline)
-4. Sales Relevance:
-   - Product/service fit
-   - Market segment alignment
-   - Use case match
+4. Freelance Service Relevance:
+   - Service/expertise fit
+   - Project potential alignment
+   - Collaboration opportunities
    - Budget alignment
    - Decision-making process
    - Competitive position
@@ -259,7 +259,7 @@ const leadAnalysis = async (filePath: string, template: Template, model: Languag
         throw new Error('Unsupported file format. Please provide a CSV or Excel file.');
     }
 
-    const prompt = template === Template.JobSearch ? getJobSearchPrompt(content) : getSalesPrompt(content);
+    const prompt = template === Template.JobSearch ? getJobSearchPrompt(content) : getFreelancePrompt(content);
 
     try {
         const result = await generateObject({

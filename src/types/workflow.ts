@@ -1,5 +1,5 @@
 import type { Lead } from "@/mail-agent/leadAnalysis";
-import type { JobProfile, SalesProfile } from "@/mail-agent/buildProfile";
+import type { JobProfile, FreelanceProfile } from "@/mail-agent/buildProfile";
 
 export type WorkflowResult = {
     lead: Lead;

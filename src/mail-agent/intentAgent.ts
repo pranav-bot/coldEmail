@@ -19,24 +19,24 @@ const intentAgent = async (userPrompt: string, template: Template, model: Langua
     Your response should be a natural, well-structured paragraph that captures their intent in a more compelling way.
     `;
 
-    const salesPrompt = `
-    You are an expert sales strategist and email writing assistant. Your task is to understand and enhance the user's sales intent to create more effective communication.
+    const freelancePrompt = `
+    You are an expert freelance consultant and pitch writing assistant. Your task is to understand and enhance the user's freelance pitch intent to create more effective client outreach.
 
     Original User Prompt: "${userPrompt}"
 
     Please analyze the user's intent and provide an enhanced version that:
-    1. Maintains their core sales objectives
-    2. Adds relevant business context and value proposition
-    3. Clarifies any ambiguous requirements
+    1. Maintains their core freelance service offerings and goals
+    2. Adds relevant expertise and unique value proposition
+    3. Clarifies their target client profile and industry niche
     4. Structures their thoughts in a clear, professional manner
-    5. Emphasizes the benefits for the prospect
-    6. Includes any implicit but important details
+    5. Emphasizes the benefits and outcomes for potential clients
+    6. Includes relevant portfolio highlights or past success metrics
 
     Focus on understanding their true intent and enhancing it, rather than just extracting information.
-    Your response should be a natural, well-structured paragraph that captures their intent in a more compelling way.
+    Your response should be a natural, well-structured paragraph that captures their freelance service offering in a compelling way.
     `;
 
-    const prompt = template === Template.JobSearch ? jobSearchPrompt : salesPrompt;
+    const prompt = template === Template.JobSearch ? jobSearchPrompt : freelancePrompt;
 
     try {
         const result = await generateText({

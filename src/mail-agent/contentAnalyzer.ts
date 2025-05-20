@@ -24,22 +24,28 @@ type JobSearchResponse = {
     additionalSections?: Record<string, string>;
 };
 
-type SalesResponse = {
-    productInfo: {
-        name: string;
-        description: string;
-        features: string[];
-        specifications: Record<string, string>;
-    };
-    targetAudience: {
+type FreelanceResponse = {
+    servicesOffered: {
         primary: string;
-        secondary: string;
-        useCases: string[];
+        secondary: string[];
+        description: string;
     };
-    keyBenefits: string[];
+    expertise: {
+        skills: string[];
+        specializations: string[];
+        tools: string[];
+        yearsExperience: string;
+    };
+    portfolioHighlights: Array<{
+        projectName: string;
+        clientName?: string;
+        description: string;
+        outcomes: string[];
+    }>;
+    clientBenefits: string[];
     uniqueSellingPoints: string[];
     pricingInfo: {
-        price: string;
+        rateStructure: string;
         valueProposition: string;
         roi: string;
     };
@@ -48,15 +54,15 @@ type SalesResponse = {
         position: string;
         trends: string[];
     };
-    technicalDetails: {
-        specifications: Record<string, string>;
-        requirements: string[];
-        compatibility: string[];
+    processOverview: {
+        workflow: string[];
+        timeline: string;
+        deliverables: string[];
     };
     socialProof: {
         testimonials: string[];
         caseStudies: string[];
-        statistics: Record<string, string>;
+        results: Record<string, string>;
     };
     callToAction: {
         nextSteps: string[];
@@ -111,42 +117,50 @@ const getTemplatePrompt = (template: Template, content: string): string => {
             - Ensure all text fields are properly escaped
             - Format dates consistently
             - List skills without duplicates
-            `;
-        case Template.Sales:
+            `;        case Template.Freelance:
             return `
-            You are a sales content analyzer. Your task is to extract and analyze any information from the provided document that could be useful for sales purposes.
+            You are a freelancer profile analyzer. Your task is to extract and analyze any information from the provided document that could be useful for freelance pitching purposes.
             Here is the content to analyze:
             
             ${content}
             
-            Please analyze the content and extract any information that could be valuable for sales, organizing it into the following sections:
-            1. Product/Service Information (what is being sold, features, specifications)
-            2. Target Audience (who would benefit from this, ideal customers)
-            3. Key Benefits (what problems does it solve, advantages)
-            4. Unique Selling Points (what makes it different from competitors)
-            5. Pricing Information (cost, value proposition, ROI)
-            6. Market Context (industry trends, market position)
-            7. Technical Details (specifications, requirements, compatibility)
-            8. Social Proof (testimonials, case studies, usage statistics)
-            9. Call to Action (how to proceed, next steps)
+            Please analyze the content and extract any information that could be valuable for freelance pitching, organizing it into the following sections:
+            1. Services Offered (what services you provide, specializations)
+            2. Expertise (skills, specializations, tools, years of experience)
+            3. Portfolio Highlights (notable projects, clients, outcomes)
+            4. Client Benefits (what problems you solve, advantages of working with you)
+            5. Unique Value Proposition (what makes you different from other freelancers)
+            6. Pricing Information (rate structure, value proposition, ROI for clients)
+            7. Market Context (industry expertise, niche position)
+            8. Process Overview (how you work, timeline, deliverables)
+            9. Social Proof (testimonials, portfolio highlights, client results)
+            10. Call to Action (how to proceed, next steps)
 
             Format response as JSON with:
             {
-                "productInfo": {
-                    "name": "",
-                    "description": "",
-                    "features": [],
-                    "specifications": {}
-                },
-                "targetAudience": {
+                "servicesOffered": {
                     "primary": "",
-                    "secondary": "",
-                    "useCases": []
+                    "secondary": [],
+                    "description": ""
                 },
-                "keyBenefits": [],
+                "expertise": {
+                    "skills": [],
+                    "specializations": [],
+                    "tools": [],
+                    "yearsExperience": ""
+                },
+                "portfolioHighlights": [
+                    {
+                        "projectName": "",
+                        "clientName": "",
+                        "description": "",
+                        "outcomes": []
+                    }
+                ],
+                "clientBenefits": [],
                 "uniqueSellingPoints": [],
                 "pricingInfo": {
-                    "price": "",
+                    "rateStructure": "",
                     "valueProposition": "",
                     "roi": ""
                 },
@@ -155,15 +169,15 @@ const getTemplatePrompt = (template: Template, content: string): string => {
                     "position": "",
                     "trends": []
                 },
-                "technicalDetails": {
-                    "specifications": {},
-                    "requirements": [],
-                    "compatibility": []
+                "processOverview": {
+                    "workflow": [],
+                    "timeline": "",
+                    "deliverables": []
                 },
                 "socialProof": {
                     "testimonials": [],
                     "caseStudies": [],
-                    "statistics": {}
+                    "results": {}
                 },
                 "callToAction": {
                     "nextSteps": [],
@@ -172,14 +186,13 @@ const getTemplatePrompt = (template: Template, content: string): string => {
             }
 
             Important:
-            - Extract any relevant information that could help in selling the product/service
+            - Extract any relevant information that could help in freelance pitching
             - If certain information is not available, leave those fields empty
             - Focus on extracting concrete, specific details rather than general statements
             - Include any numbers, statistics, or specific examples mentioned
-            - Highlight any unique or competitive advantages
-            - Note any time-sensitive offers or promotions
-            - Include any relevant technical specifications or requirements
-            - Extract any social proof or validation of the product/service
+            - Highlight any unique skills or competitive advantages
+            - Include portfolio examples and client success stories when available
+            - Extract any social proof or validation of your work
             `;
         default:
             const _exhaustiveCheck: never = template;
@@ -187,7 +200,7 @@ const getTemplatePrompt = (template: Template, content: string): string => {
     }
 };
 
-const contentAnalyzer = async (resumePath: string, template: Template, model: LanguageModelV1): Promise<JobSearchResponse | SalesResponse> => {
+const contentAnalyzer = async (resumePath: string, template: Template, model: LanguageModelV1): Promise<JobSearchResponse | FreelanceResponse> => {
     // Ensure the file path is absolute
     const absolutePath = path.resolve(resumePath);
     
@@ -199,11 +212,10 @@ const contentAnalyzer = async (resumePath: string, template: Template, model: La
     
     const prompt = getTemplatePrompt(template, pdfContent);
     
-    try {
-        const result = await generateObject({
+    try {        const result = await generateObject({
             model: model,
             prompt: prompt,
-            schema: template === Template.JobSearch ?
+            validator: template === Template.JobSearch ?
                 z.object({
                     personalInfo: z.string().min(1),
                     summary: z.string().min(1).max(1000),
@@ -223,21 +235,27 @@ const contentAnalyzer = async (resumePath: string, template: Template, model: La
                     additionalSections: z.record(z.string()).optional()
                 }) :
                 z.object({
-                    productInfo: z.object({
-                        name: z.string().min(1),
-                        description: z.string().min(1),
-                        features: z.array(z.string()),
-                        specifications: z.record(z.string())
-                    }),
-                    targetAudience: z.object({
+                    servicesOffered: z.object({
                         primary: z.string().min(1),
-                        secondary: z.string(),
-                        useCases: z.array(z.string())
+                        secondary: z.array(z.string()),
+                        description: z.string().min(1)
                     }),
-                    keyBenefits: z.array(z.string()),
+                    expertise: z.object({
+                        skills: z.array(z.string()),
+                        specializations: z.array(z.string()),
+                        tools: z.array(z.string()),
+                        yearsExperience: z.string()
+                    }),
+                    portfolioHighlights: z.array(z.object({
+                        projectName: z.string().min(1),
+                        clientName: z.string().optional(),
+                        description: z.string().min(1),
+                        outcomes: z.array(z.string())
+                    })),
+                    clientBenefits: z.array(z.string()),
                     uniqueSellingPoints: z.array(z.string()),
                     pricingInfo: z.object({
-                        price: z.string().min(1),
+                        rateStructure: z.string().min(1),
                         valueProposition: z.string(),
                         roi: z.string()
                     }),
@@ -246,15 +264,15 @@ const contentAnalyzer = async (resumePath: string, template: Template, model: La
                         position: z.string(),
                         trends: z.array(z.string())
                     }),
-                    technicalDetails: z.object({
-                        specifications: z.record(z.string()),
-                        requirements: z.array(z.string()),
-                        compatibility: z.array(z.string())
+                    processOverview: z.object({
+                        workflow: z.array(z.string()),
+                        timeline: z.string(),
+                        deliverables: z.array(z.string())
                     }),
                     socialProof: z.object({
                         testimonials: z.array(z.string()),
                         caseStudies: z.array(z.string()),
-                        statistics: z.record(z.string())
+                        results: z.record(z.string())
                     }),
                     callToAction: z.object({
                         nextSteps: z.array(z.string()),
@@ -280,22 +298,21 @@ const contentAnalyzer = async (resumePath: string, template: Template, model: La
                 }))
             };
         } else {
-            const salesResult = result.object as unknown as SalesResponse;
+            const freelanceResult = result.object as unknown as FreelanceResponse;
             return {
-                ...salesResult,
-                productInfo: {
-                    ...salesResult.productInfo,
-                    description: salesResult.productInfo.description.trim().replace(/\n+/g, ' ')
+                ...freelanceResult,
+                servicesOffered: {
+                    ...freelanceResult.servicesOffered,
+                    description: freelanceResult.servicesOffered.description.trim().replace(/\n+/g, ' ')
                 },
-                targetAudience: {
-                    ...salesResult.targetAudience,
-                    primary: salesResult.targetAudience.primary.trim().replace(/\n+/g, ' '),
-                    secondary: salesResult.targetAudience.secondary?.trim().replace(/\n+/g, ' ') ?? ''
+                expertise: {
+                    ...freelanceResult.expertise,
+                    yearsExperience: freelanceResult.expertise.yearsExperience?.trim().replace(/\n+/g, ' ') ?? ''
                 },
                 pricingInfo: {
-                    ...salesResult.pricingInfo,
-                    price: salesResult.pricingInfo.price.trim().replace(/\n+/g, ' '),
-                    valueProposition: salesResult.pricingInfo.valueProposition?.trim().replace(/\n+/g, ' ') ?? ''
+                    ...freelanceResult.pricingInfo,
+                    rateStructure: freelanceResult.pricingInfo.rateStructure.trim().replace(/\n+/g, ' '),
+                    valueProposition: freelanceResult.pricingInfo.valueProposition?.trim().replace(/\n+/g, ' ') ?? ''
                 }
             };
         }

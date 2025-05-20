@@ -1,6 +1,6 @@
 export enum Template {
     JobSearch = "JobSearch",
-    Sales = "Sales",
+    Freelance = "Freelance",
 }
 
 export const enums = {

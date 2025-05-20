@@ -2,7 +2,7 @@ import type { LanguageModelV1 } from "ai";
 import { Template } from "./enums";
 import { generateText } from "ai";
 import type { Lead } from "./leadAnalysis";
-import type { JobProfile, SalesProfile } from "./buildProfile";
+import type { JobProfile, FreelanceProfile } from "./buildProfile";
 
 type EmailContent = {
     subject: string;
@@ -44,25 +44,25 @@ Format the response as a JSON object with these fields:
 }
 `;
 
-const getSalesEmailPrompt = (lead: Lead, profile: SalesProfile) => `
-You are an expert sales email strategist. Your task is to write a compelling cold email that will get a response from the potential customer.
+const getFreelanceEmailPrompt = (lead: Lead, profile: FreelanceProfile) => `
+You are an expert freelancer pitch email strategist. Your task is to write a compelling cold email that will get a response from the potential client.
 
 Lead Information:
 ${JSON.stringify(lead, null, 2)}
 
-Product/Service Profile:
+Freelancer Profile:
 ${JSON.stringify(profile, null, 2)}
 
 Please write a cold email that:
-1. Has a compelling subject line that creates urgency or curiosity
-2. Opens with a personalized hook based on their industry/role
-3. Demonstrates understanding of their business challenges
-4. Highlights how your solution addresses their specific pain points
-5. Includes relevant social proof or success stories
-6. Provides a clear value proposition
-7. Includes a strong call to action
-8. Maintains a professional yet engaging tone
-9. Is concise and easy to read
+1. Has a compelling subject line that creates interest or addresses a specific need
+2. Opens with a personalized hook based on their industry/role/challenges
+3. Demonstrates understanding of their business needs or opportunities
+4. Highlights how your services can solve their problems or achieve their goals
+5. Includes relevant portfolio examples or success stories with similar clients
+6. Provides a clear value proposition focusing on results, not just services
+7. Includes a non-pushy call to action for a quick consultation or discussion
+8. Maintains a professional, confident yet approachable tone
+9. Is concise and easy to read with a focus on their benefits, not just your capabilities
 
 Format the response as a JSON object with these fields:
 {
@@ -101,8 +101,8 @@ Format the response as a JSON object with these fields:
 }
 `;
 
-const getSalesLinkedInPrompt = (lead: Lead, profile: SalesProfile) => `
-You are an expert LinkedIn outreach strategist for sales. Your task is to write a concise, engaging LinkedIn message sequence to connect with a potential customer.
+const getFreelanceLinkedInPrompt = (lead: Lead, profile: FreelanceProfile) => `
+You are an expert LinkedIn outreach strategist for freelancers. Your task is to write a concise, engaging LinkedIn message sequence to connect with a potential client.
 
 Lead LinkedIn:
 ${lead.contactInfo.linkedin ?? ""}
@@ -110,16 +110,16 @@ ${lead.contactInfo.linkedin ?? ""}
 Lead Information:
 ${JSON.stringify(lead, null, 2)}
 
-Product/Service Profile:
+Freelancer Profile:
 ${JSON.stringify(profile, null, 2)}
 
 Please provide:
 1. A short connection request introduction (no more than 300 characters).
 2. A follow-up LinkedIn message (no more than 500 characters) that:
 - References the connection
-- Demonstrates understanding of their business challenges
-- Highlights a key benefit or success story
-- Includes a clear call to action
+- Demonstrates understanding of their specific needs or goals
+- Highlights a relevant skill or successful project outcome
+- Includes a clear but soft call to action (like a quick 15-minute chat)
 
 Format the response as a JSON object with these fields:
 {
@@ -131,13 +131,13 @@ Format the response as a JSON object with these fields:
 
 export const writeEmail = async (
     lead: Lead,
-    profile: JobProfile | SalesProfile,
+    profile: JobProfile | FreelanceProfile,
     template: Template,
     model: LanguageModelV1
 ): Promise<EmailContent> => {
     const prompt = template === Template.JobSearch 
         ? getJobSearchEmailPrompt(lead, profile as JobProfile)
-        : getSalesEmailPrompt(lead, profile as SalesProfile);
+        : getFreelanceEmailPrompt(lead, profile as FreelanceProfile);
 
     try {
         const result = await generateText({ model, prompt });
@@ -169,13 +169,13 @@ export const writeEmail = async (
 
 export const writeLinkedInMessage = async (
     lead: Lead,
-    profile: JobProfile | SalesProfile,
+    profile: JobProfile | FreelanceProfile,
     template: Template,
     model: LanguageModelV1
 ): Promise<LinkedInContent> => {
     const prompt = template === Template.JobSearch
         ? getJobSearchLinkedInPrompt(lead, profile as JobProfile)
-        : getSalesLinkedInPrompt(lead, profile as SalesProfile);
+        : getFreelanceLinkedInPrompt(lead, profile as FreelanceProfile);
 
     try {
         const result = await generateText({ model, prompt });
