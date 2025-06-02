@@ -29,21 +29,21 @@ export async function POST(req: Request) {
         await writeFile(tempLeadsPath, Buffer.from(await leadsFile.arrayBuffer()))
 
         // Process user intent
-        const enhancedIntent = await intentAgent(userInput, template, gemini.chat('gemini-1.5-flash'))
+        const enhancedIntent = await intentAgent(userInput, template, gemini.chat('gemini-2.0-flash'))
 
         // Build profile with uploaded resume
         const profile = await buildProfile(
             enhancedIntent,
             tempResumePath,
             template,
-            gemini.chat('gemini-1.5-flash')
+            gemini.chat('gemini-2.0-flash')
         )
 
         // Get leads from uploaded file
         const leads = await leadAnalysis(
             tempLeadsPath,
             template,
-            gemini.chat('gemini-1.5-flash')
+            gemini.chat('gemini-2.0-flash')
         )
 
         // Generate content for each lead
@@ -53,14 +53,14 @@ export async function POST(req: Request) {
                     lead,
                     profile,
                     template,
-                    gemini.chat('gemini-1.5-flash')
+                    gemini.chat('gemini-2.0-flash')
                 )
 
                 const linkedInContent = await writeLinkedInMessage(
                     lead,
                     profile,
                     template,
-                    gemini.chat('gemini-1.5-flash')
+                    gemini.chat('gemini-2.0-flash')
                 )
 
                 return {

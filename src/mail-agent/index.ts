@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename);
 
 const userInput = "My goal is to find a job as fast as possible in the field of AI and ML in large tech companies. I have experience in Python, TensorFlow, and data analysis. I am looking for roles like Data Scientist or Machine Learning Engineer. I prefer to work in companies that are innovative and have a strong focus on AI research.";
 
-const user_intent = await intentAgent(userInput, Template.JobSearch, gemini.chat('gemini-1.5-flash')).then((result) => {
+const user_intent = await intentAgent(userInput, Template.JobSearch, gemini.chat('gemini-2.0-flash')).then((result) => {
     console.log(result);
     return result;
 }).catch((error) => {
@@ -21,7 +21,7 @@ const user_intent = await intentAgent(userInput, Template.JobSearch, gemini.chat
     return ""; // Provide a fallback value in case of error
 });
 
-const profile: Promise<string | JobProfile | FreelanceProfile> = buildProfile(user_intent, 'src/mail-agent/PranavAdvaniResume.pdf', Template.JobSearch, gemini.chat('gemini-1.5-flash')).then((result) => {
+const profile: Promise<string | JobProfile | FreelanceProfile> = buildProfile(user_intent, 'src/mail-agent/PranavAdvaniResume.pdf', Template.JobSearch, gemini.chat('gemini-2.0-flash')).then((result) => {
     console.log(result);
     return result;
 }).catch((error) => {
@@ -32,7 +32,7 @@ const profile: Promise<string | JobProfile | FreelanceProfile> = buildProfile(us
 const leads = leadAnalysis(
     path.join(__dirname, 'jobs - Sheet1.csv'),
     Template.JobSearch,
-    gemini.chat('gemini-1.5-flash')
+    gemini.chat('gemini-2.0-flash')
 ).then((leads) => {
     console.log("\nJob Search Leads Analysis:");
     leads.forEach((lead, index) => {
@@ -62,7 +62,7 @@ leads.then(async (leads) => {
 
                 // Generate email content
                 try {
-                    const emailContent = await writeEmail(lead, profile as JobProfile, template, gemini.chat('gemini-1.5-flash'));
+                    const emailContent = await writeEmail(lead, profile as JobProfile, template, gemini.chat('gemini-2.0-flash'));
                     console.log("\nGenerated Email Content:");
                     console.log("Subject:", emailContent.subject);
                     console.log("Body:", emailContent.body);
@@ -72,7 +72,7 @@ leads.then(async (leads) => {
 
                 // Generate LinkedIn message content
                 try {
-                    const linkedInContent = await writeLinkedInMessage(lead, profile as JobProfile, template, gemini.chat('gemini-1.5-flash'));
+                    const linkedInContent = await writeLinkedInMessage(lead, profile as JobProfile, template, gemini.chat('gemini-2.0-flash'));
                     console.log("\nGenerated LinkedIn Message Content:");
                     console.log("Intro:", linkedInContent.intro);
                     console.log("Message:", linkedInContent.message);

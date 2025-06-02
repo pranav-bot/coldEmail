@@ -30,7 +30,7 @@ export async function POST(req: Request) {
                     stepContent,
                     tempResumePath,
                     template,
-                    gemini.chat('gemini-1.5-flash')
+                    gemini.chat('gemini-2.0-flash')
                 )
                 content = JSON.stringify(profile, null, 2)
                 break
@@ -43,7 +43,7 @@ export async function POST(req: Request) {
                 const leads = await leadAnalysis(
                     tempLeadsPath,  // Pass the temporary file path instead of ArrayBuffer
                     template,
-                    gemini.chat('gemini-1.5-flash')
+                    gemini.chat('gemini-2.0-flash')
                 )
                 content = JSON.stringify(leads, null, 2)
                 break
@@ -73,14 +73,14 @@ export async function POST(req: Request) {
                                 lead,
                                 analyzedProfile,
                                 template,
-                                gemini.chat('gemini-1.5-flash')
+                                gemini.chat('gemini-2.0-flash')
                             )
 
                             const linkedInContent = await writeLinkedInMessage(
                                 lead,
                                 analyzedProfile,
                                 template,
-                                gemini.chat('gemini-1.5-flash')
+                                gemini.chat('gemini-2.0-flash')
                             )
 
                             return {
