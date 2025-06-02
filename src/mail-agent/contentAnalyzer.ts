@@ -469,12 +469,10 @@ const contentAnalyzer = async (
             });
         } else {
             throw new Error(`Unsupported template type: ${template}`);
-        }
-
-        const result = await generateObject({
-            model,
-            prompt,
-            validator
+        }        const result = await generateObject({
+            model: model,
+            prompt: prompt,
+            schema: validator
         });
 
         // Clean up the response
