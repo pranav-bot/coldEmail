@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Loader2 } from "lucide-react"
 import { ScrollArea } from "@radix-ui/react-scroll-area"
 import type { WorkflowResult } from "@/types/workflow"
+import { WorkflowEmailEditor } from "@/components/workflow-email-editor"
 
 type StepEditorProps = {
     step: WorkflowStep;
@@ -498,17 +499,37 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false }: StepEdi
 
                                             {/* Email Content */}
                                             <div>
-                                                <h4 className="font-medium mb-2">Email</h4>
-                                                <div className="space-y-2">
-                                                    <div className="bg-muted p-3 rounded">
-                                                        <p className="font-medium">Subject:</p>
-                                                        <p>{emailContent.subject}</p>
-                                                    </div>
-                                                    <div className="bg-muted p-3 rounded">
-                                                        <p className="font-medium">Body:</p>
-                                                        <p className="whitespace-pre-wrap">{emailContent.body}</p>
-                                                    </div>
-                                                </div>
+                                                <h4 className="font-medium mb-4">Email</h4>
+                                                <WorkflowEmailEditor
+                                                    to={lead.contactInfo.email || ''}
+                                                    subject={emailContent.subject || ''}
+                                                    body={emailContent.body || ''}
+                                                    leadName={lead.contactInfo.name || 'Unknown'}
+                                                    onSend={(data) => {
+                                                        // Handle email sending logic here
+                                                        console.log('Sending email:', data);
+                                                        // You can implement actual email sending API call here
+                                                    }}
+                                                    onCopy={async () => {
+                                                        // Copy email content to clipboard
+                                                        const emailText = `To: ${lead.contactInfo.email}\nSubject: ${emailContent.subject}\n\n${emailContent.body}`;
+                                                        await navigator.clipboard.writeText(emailText);
+                                                    }}
+                                                    onDownload={() => {
+                                                        // Download email as file
+                                                        const emailText = `To: ${lead.contactInfo.email}\nSubject: ${emailContent.subject}\n\n${emailContent.body}`;
+                                                        const blob = new Blob([emailText], { type: 'text/plain' });
+                                                        const url = URL.createObjectURL(blob);
+                                                        const a = document.createElement('a');
+                                                        a.href = url;
+                                                        a.download = `email-${lead.contactInfo.name || 'lead'}.txt`;
+                                                        document.body.appendChild(a);
+                                                        a.click();
+                                                        document.body.removeChild(a);
+                                                        URL.revokeObjectURL(url);
+                                                    }}
+                                                    isEditable={true}
+                                                />
                                             </div>
 
                                             {/* LinkedIn Content */}
