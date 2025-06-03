@@ -19,10 +19,12 @@ import { WorkflowEmailEditor } from "@/components/workflow-email-editor"
 type StepEditorProps = {
     step: WorkflowStep;
     onSubmit: (content: string) => void;
-    isHistoricalView?: boolean; // Add this prop
+    isHistoricalView?: boolean;
+    initialAttachments?: File[];
+    isParentLoading?: boolean;
 }
 
-export function StepEditor({ step, onSubmit, isHistoricalView = false }: StepEditorProps) {
+export function StepEditor({ step, onSubmit, isHistoricalView = false, initialAttachments = [], isParentLoading = false }: StepEditorProps) {
     const [editedContent, setEditedContent] = useState(step.content)
     const [parsedContent, setParsedContent] = useState<any>(null)
     const [isEditing, setIsEditing] = useState(false)
@@ -65,9 +67,9 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false }: StepEdi
         <Button 
             onClick={() => handleSubmit(editedContent)} 
             className="w-full"
-            disabled={isLoading}
+            disabled={isLoading || isParentLoading}
         >
-            {isLoading ? (
+            {(isLoading || isParentLoading) ? (
                 <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Processing...
@@ -114,7 +116,7 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false }: StepEdi
                         <AccordionContent>
                             <div className="space-y-4">
                                 <Textarea
-                                    value={profile.personalInfo}
+                                    value={profile.personalInfo || ''}
                                     onChange={(e) => {
                                         const updatedProfile = { ...profile }
                                         updatedProfile.personalInfo = e.target.value
@@ -124,7 +126,7 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false }: StepEdi
                                     placeholder="Enter personal information..."
                                 />
                                 <Textarea
-                                    value={profile.summary}
+                                    value={profile.summary || ''}
                                     onChange={(e) => {
                                         const updatedProfile = { ...profile }
                                         updatedProfile.summary = e.target.value
@@ -142,40 +144,52 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false }: StepEdi
                         <AccordionTrigger>Experience</AccordionTrigger>
                         <AccordionContent>
                             <div className="space-y-4">
-                                {profile.experience.map((exp: any, i: number) => (
+                                {(profile.experience || []).map((exp: any, i: number) => (
                                     <div key={i} className="border rounded p-4 space-y-2">
                                         <Input
-                                            value={exp.company}
+                                            value={exp.company || ''}
                                             onChange={(e) => {
                                                 const updatedProfile = { ...profile }
-                                                updatedProfile.experience[i].company = e.target.value
+                                                if (!updatedProfile.experience) {
+                                                    updatedProfile.experience = []
+                                                }
+                                                updatedProfile.experience[i] = { ...updatedProfile.experience[i], company: e.target.value }
                                                 setEditedContent(JSON.stringify(updatedProfile, null, 2))
                                             }}
                                             placeholder="Company name"
                                         />
                                         <Input
-                                            value={exp.position}
+                                            value={exp.position || ''}
                                             onChange={(e) => {
                                                 const updatedProfile = { ...profile }
-                                                updatedProfile.experience[i].position = e.target.value
+                                                if (!updatedProfile.experience) {
+                                                    updatedProfile.experience = []
+                                                }
+                                                updatedProfile.experience[i] = { ...updatedProfile.experience[i], position: e.target.value }
                                                 setEditedContent(JSON.stringify(updatedProfile, null, 2))
                                             }}
                                             placeholder="Position"
                                         />
                                         <Input
-                                            value={exp.duration}
+                                            value={exp.duration || ''}
                                             onChange={(e) => {
                                                 const updatedProfile = { ...profile }
-                                                updatedProfile.experience[i].duration = e.target.value
+                                                if (!updatedProfile.experience) {
+                                                    updatedProfile.experience = []
+                                                }
+                                                updatedProfile.experience[i] = { ...updatedProfile.experience[i], duration: e.target.value }
                                                 setEditedContent(JSON.stringify(updatedProfile, null, 2))
                                             }}
                                             placeholder="Duration"
                                         />
                                         <Textarea
-                                            value={exp.description}
+                                            value={exp.description || ''}
                                             onChange={(e) => {
                                                 const updatedProfile = { ...profile }
-                                                updatedProfile.experience[i].description = e.target.value
+                                                if (!updatedProfile.experience) {
+                                                    updatedProfile.experience = []
+                                                }
+                                                updatedProfile.experience[i] = { ...updatedProfile.experience[i], description: e.target.value }
                                                 setEditedContent(JSON.stringify(updatedProfile, null, 2))
                                             }}
                                             className="min-h-[100px]"
@@ -186,6 +200,9 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false }: StepEdi
                                             size="sm"
                                             onClick={() => {
                                                 const updatedProfile = { ...profile }
+                                                if (!updatedProfile.experience) {
+                                                    updatedProfile.experience = []
+                                                }
                                                 updatedProfile.experience.splice(i, 1)
                                                 setEditedContent(JSON.stringify(updatedProfile, null, 2))
                                             }}
@@ -197,6 +214,9 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false }: StepEdi
                                 <Button
                                     onClick={() => {
                                         const updatedProfile = { ...profile }
+                                        if (!updatedProfile.experience) {
+                                            updatedProfile.experience = []
+                                        }
                                         updatedProfile.experience.push({
                                             company: '',
                                             position: '',
@@ -219,13 +239,14 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false }: StepEdi
                         <AccordionContent>
                             <div className="space-y-4">
                                 <div className="flex flex-wrap gap-2">
-                                    {profile.skills.map((skill: string, i: number) => (
+                                    {(profile.skills || []).map((skill: string, i: number) => (
                                         <Badge key={i} variant="secondary" className="group">
                                             {skill}
                                             <button
                                                 className="ml-2 opacity-0 group-hover:opacity-100"
                                                 onClick={() => {
                                                     const updatedProfile = { ...profile }
+                                                    if (!updatedProfile.skills) updatedProfile.skills = []
                                                     updatedProfile.skills.splice(i, 1)
                                                     setEditedContent(JSON.stringify(updatedProfile, null, 2))
                                                 }}
@@ -241,6 +262,7 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false }: StepEdi
                                         onKeyDown={(e) => {
                                             if (e.key === 'Enter' && e.currentTarget.value) {
                                                 const updatedProfile = { ...profile }
+                                                if (!updatedProfile.skills) updatedProfile.skills = []
                                                 updatedProfile.skills.push(e.currentTarget.value)
                                                 setEditedContent(JSON.stringify(updatedProfile, null, 2))
                                                 e.currentTarget.value = ''
@@ -260,9 +282,10 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false }: StepEdi
                                 <div>
                                     <label className="text-sm font-medium">Tone</label>
                                     <Input
-                                        value={profile.communicationStyle.tone}
+                                        value={profile.communicationStyle?.tone || ''}
                                         onChange={(e) => {
                                             const updatedProfile = { ...profile }
+                                            if (!updatedProfile.communicationStyle) updatedProfile.communicationStyle = {}
                                             updatedProfile.communicationStyle.tone = e.target.value
                                             setEditedContent(JSON.stringify(updatedProfile, null, 2))
                                         }}
@@ -271,9 +294,10 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false }: StepEdi
                                 <div>
                                     <label className="text-sm font-medium">Value Proposition</label>
                                     <Textarea
-                                        value={profile.communicationStyle.valueProposition}
+                                        value={profile.communicationStyle?.valueProposition || ''}
                                         onChange={(e) => {
                                             const updatedProfile = { ...profile }
+                                            if (!updatedProfile.communicationStyle) updatedProfile.communicationStyle = {}
                                             updatedProfile.communicationStyle.valueProposition = e.target.value
                                             setEditedContent(JSON.stringify(updatedProfile, null, 2))
                                         }}
@@ -495,29 +519,28 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false }: StepEdi
                                                     <p><span className="font-medium">Company:</span> {lead.companyInfo?.name || 'N/A'}</p>
                                                     <p><span className="font-medium">Industry:</span> {lead.companyInfo?.industry || 'N/A'}</p>
                                                 </div>
-                                            </div>
-
-                                            {/* Email Content */}
-                                            <div>
-                                                <h4 className="font-medium mb-4">Email</h4>
-                                                <WorkflowEmailEditor
-                                                    to={lead.contactInfo.email || ''}
-                                                    subject={emailContent.subject || ''}
-                                                    body={emailContent.body || ''}
-                                                    leadName={lead.contactInfo.name || 'Unknown'}
-                                                    onSend={(data) => {
-                                                        // Handle email sending logic here
-                                                        console.log('Sending email:', data);
-                                                        // You can implement actual email sending API call here
-                                                    }}
-                                                    onCopy={async () => {
-                                                        // Copy email content to clipboard
-                                                        const emailText = `To: ${lead.contactInfo.email}\nSubject: ${emailContent.subject}\n\n${emailContent.body}`;
-                                                        await navigator.clipboard.writeText(emailText);
-                                                    }}
-                                                    onDownload={() => {
-                                                        // Download email as file
-                                                        const emailText = `To: ${lead.contactInfo.email}\nSubject: ${emailContent.subject}\n\n${emailContent.body}`;
+                                            </div>                            {/* Email Content */}
+                            <div>
+                                <h4 className="font-medium mb-4">Email</h4>
+                                <WorkflowEmailEditor
+                                    to={lead.contactInfo.email || ''}
+                                    subject={emailContent.subject || ''}
+                                    body={emailContent.body || ''}
+                                    leadName={lead.contactInfo.name || 'Unknown'}
+                                    initialAttachments={initialAttachments}
+                                    onSend={(data) => {
+                                        // Handle email sending logic here
+                                        console.log('Sending email:', data);
+                                        // You can implement actual email sending API call here
+                                    }}
+                                    onCopy={async () => {
+                                        // Copy email content to clipboard
+                                        const emailText = `To: ${lead.contactInfo.email}\nSubject: ${emailContent.subject}\n\n${emailContent.body}`;
+                                        await navigator.clipboard.writeText(emailText);
+                                    }}
+                                    onDownload={() => {
+                                        // Download email as file
+                                        const emailText = `To: ${lead.contactInfo.email}\nSubject: ${emailContent.subject}\n\n${emailContent.body}`;
                                                         const blob = new Blob([emailText], { type: 'text/plain' });
                                                         const url = URL.createObjectURL(blob);
                                                         const a = document.createElement('a');
@@ -568,7 +591,7 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false }: StepEdi
                             variant="outline" 
                             size="sm"
                             onClick={() => setIsEditing(true)}
-                            disabled={isLoading}
+                            disabled={isLoading || isParentLoading}
                         >
                             Edit Intent
                         </Button>
@@ -590,7 +613,7 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false }: StepEdi
                                     setIsEditing(false)
                                     setEditedContent(step.content) // Reset to original content
                                 }}
-                                disabled={isLoading}
+                                disabled={isLoading || isParentLoading}
                             >
                                 Cancel
                             </Button>
@@ -599,9 +622,9 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false }: StepEdi
                                     setIsEditing(false)
                                     handleSubmit(editedContent)
                                 }}
-                                disabled={isLoading}
+                                disabled={isLoading || isParentLoading}
                             >
-                                {isLoading ? (
+                                {(isLoading || isParentLoading) ? (
                                     <>
                                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                                         Processing...

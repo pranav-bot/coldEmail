@@ -456,6 +456,8 @@ export function WorkflowClient() {
                                     <StepEditor
                                         step={steps[currentStepIndex]}
                                         onSubmit={handleStepSubmit}
+                                        initialAttachments={resumeFile ? [resumeFile] : []}
+                                        isParentLoading={isLoading}
                                     />
                                 )}
                             </div>

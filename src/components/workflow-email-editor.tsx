@@ -1,3 +1,5 @@
+//TODO: improve prompts to give body with better formatting
+
 "use client";
 
 import { useState, useRef } from "react";
@@ -46,6 +48,7 @@ type WorkflowEmailEditorProps = {
     subject: string;
     body: string;
     leadName: string;
+    initialAttachments?: File[];
     onSend?: (data: { to: string; subject: string; body: string; attachments: File[] }) => void;
     onCopy?: () => void;
     onDownload?: () => void;
@@ -57,6 +60,7 @@ export function WorkflowEmailEditor({
     subject: initialSubject,
     body: initialBody,
     leadName,
+    initialAttachments = [],
     onSend,
     onCopy,
     onDownload,
@@ -64,7 +68,7 @@ export function WorkflowEmailEditor({
 }: WorkflowEmailEditorProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [editableSubject, setEditableSubject] = useState(initialSubject);
-    const [attachments, setAttachments] = useState<File[]>([]);
+    const [attachments, setAttachments] = useState<File[]>(initialAttachments);
     const [isSending, setIsSending] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
