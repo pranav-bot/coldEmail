@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/accordion"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { Loader2 } from "lucide-react"
+import { Loader2, Search } from "lucide-react"
 import { ScrollArea } from "@radix-ui/react-scroll-area"
 import type { WorkflowResult } from "@/types/workflow"
 import { WorkflowEmailEditor } from "@/components/workflow-email-editor"
@@ -29,6 +29,7 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false, initialAt
     const [parsedContent, setParsedContent] = useState<any>(null)
     const [isEditing, setIsEditing] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
+    const [searchTerm, setSearchTerm] = useState('')
 
     useEffect(() => {
         if (!step.content) {
@@ -51,6 +52,11 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false, initialAt
             setEditedContent(step.content || '')
         }
     }, [step.content])
+
+    // Reset search when step changes
+    useEffect(() => {
+        setSearchTerm('')
+    }, [step.name])
 
     const handleSubmit = async (content: string) => {
         setIsLoading(true)
@@ -317,152 +323,183 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false, initialAt
     if (step.name === 'Lead Analysis') {
         const leads = Array.isArray(parsedContent) ? parsedContent : []
         
+        // Filter leads based on search term
+        const filteredLeads = leads.filter((lead: any) => {
+            if (!searchTerm) return true
+            const searchLower = searchTerm.toLowerCase()
+            const name = lead.contactInfo?.name?.toLowerCase() || ''
+            const company = lead.companyInfo?.name?.toLowerCase() || ''
+            const email = lead.contactInfo?.email?.toLowerCase() || ''
+            return name.includes(searchLower) || company.includes(searchLower) || email.includes(searchLower)
+        })
+        
         return (
             <div className="space-y-4">
+                {/* Search Bar */}
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                        placeholder="Search leads by name, company, or email..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                    />
+                </div>
+                
+                {/* Results count */}
+                <div className="text-sm text-muted-foreground">
+                    {searchTerm ? `${filteredLeads.length} of ${leads.length} leads` : `${leads.length} leads`}
+                </div>
+
                 <Accordion type="single" collapsible className="w-full">
-                    {leads.map((lead: any, index: number) => (
-                        <AccordionItem key={index} value={`lead-${index}`}>
-                            <AccordionTrigger>
-                                {lead.contactInfo?.name || 'Unnamed Lead'} - {lead.companyInfo?.name || 'Unknown Company'}
-                            </AccordionTrigger>
-                            <AccordionContent>
-                                <div className="space-y-4">
-                                    {/* Contact Information */}
-                                    <div>
-                                        <h4 className="font-medium mb-2">Contact Information</h4>
-                                        <div className="space-y-2">
-                                            <Input
-                                                value={lead.contactInfo?.name || ''}
-                                                onChange={(e) => {
-                                                    const updatedLeads = [...leads]
-                                                    if (!updatedLeads[index].contactInfo) {
-                                                        updatedLeads[index].contactInfo = {}
-                                                    }
-                                                    updatedLeads[index].contactInfo.name = e.target.value
-                                                    setEditedContent(JSON.stringify(updatedLeads, null, 2))
-                                                }}
-                                                placeholder="Name"
-                                            />
-                                            <Input
-                                                value={lead.contactInfo?.email || ''}
-                                                onChange={(e) => {
-                                                    const updatedLeads = [...leads]
-                                                    if (!updatedLeads[index].contactInfo) {
-                                                        updatedLeads[index].contactInfo = {}
-                                                    }
-                                                    updatedLeads[index].contactInfo.email = e.target.value
-                                                    setEditedContent(JSON.stringify(updatedLeads, null, 2))
-                                                }}
-                                                placeholder="Email"
-                                            />
-                                            <Input
-                                                value={lead.contactInfo?.linkedin || ''}
-                                                onChange={(e) => {
-                                                    const updatedLeads = [...leads]
-                                                    if (!updatedLeads[index].contactInfo) {
-                                                        updatedLeads[index].contactInfo = {}
-                                                    }
-                                                    updatedLeads[index].contactInfo.linkedin = e.target.value
-                                                    setEditedContent(JSON.stringify(updatedLeads, null, 2))
-                                                }}
-                                                placeholder="LinkedIn URL"
-                                            />
+                    {filteredLeads.map((lead: any, originalIndex: number) => {
+                        // Find original index for updating
+                        const actualIndex = leads.findIndex((l: any) => l === lead)
+                        
+                        return (
+                            <AccordionItem key={actualIndex} value={`lead-${actualIndex}`}>
+                                <AccordionTrigger>
+                                    {lead.contactInfo?.name || 'Unnamed Lead'} - {lead.companyInfo?.name || 'Unknown Company'}
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                    <div className="space-y-4">
+                                        {/* Contact Information */}
+                                        <div>
+                                            <h4 className="font-medium mb-2">Contact Information</h4>
+                                            <div className="space-y-2">
+                                                <Input
+                                                    value={lead.contactInfo?.name || ''}
+                                                    onChange={(e) => {
+                                                        const updatedLeads = [...leads]
+                                                        if (!updatedLeads[actualIndex].contactInfo) {
+                                                            updatedLeads[actualIndex].contactInfo = {}
+                                                        }
+                                                        updatedLeads[actualIndex].contactInfo.name = e.target.value
+                                                        setEditedContent(JSON.stringify(updatedLeads, null, 2))
+                                                    }}
+                                                    placeholder="Name"
+                                                />
+                                                <Input
+                                                    value={lead.contactInfo?.email || ''}
+                                                    onChange={(e) => {
+                                                        const updatedLeads = [...leads]
+                                                        if (!updatedLeads[actualIndex].contactInfo) {
+                                                            updatedLeads[actualIndex].contactInfo = {}
+                                                        }
+                                                        updatedLeads[actualIndex].contactInfo.email = e.target.value
+                                                        setEditedContent(JSON.stringify(updatedLeads, null, 2))
+                                                    }}
+                                                    placeholder="Email"
+                                                />
+                                                <Input
+                                                    value={lead.contactInfo?.linkedin || ''}
+                                                    onChange={(e) => {
+                                                        const updatedLeads = [...leads]
+                                                        if (!updatedLeads[actualIndex].contactInfo) {
+                                                            updatedLeads[actualIndex].contactInfo = {}
+                                                        }
+                                                        updatedLeads[actualIndex].contactInfo.linkedin = e.target.value
+                                                        setEditedContent(JSON.stringify(updatedLeads, null, 2))
+                                                    }}
+                                                    placeholder="LinkedIn URL"
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    {/* Company Information */}
-                                    <div>
-                                        <h4 className="font-medium mb-2">Company Information</h4>
-                                        <div className="space-y-2">
-                                            <Input
-                                                value={lead.companyInfo?.name || ''}
-                                                onChange={(e) => {
-                                                    const updatedLeads = [...leads]
-                                                    if (!updatedLeads[index].companyInfo) {
-                                                        updatedLeads[index].companyInfo = {}
-                                                    }
-                                                    updatedLeads[index].companyInfo.name = e.target.value
-                                                    setEditedContent(JSON.stringify(updatedLeads, null, 2))
-                                                }}
-                                                placeholder="Company Name"
-                                            />
-                                            <Input
-                                                value={lead.companyInfo?.industry || ''}
-                                                onChange={(e) => {
-                                                    const updatedLeads = [...leads]
-                                                    if (!updatedLeads[index].companyInfo) {
-                                                        updatedLeads[index].companyInfo = {}
-                                                    }
-                                                    updatedLeads[index].companyInfo.industry = e.target.value
-                                                    setEditedContent(JSON.stringify(updatedLeads, null, 2))
-                                                }}
-                                                placeholder="Industry"
-                                            />
+                                        {/* Company Information */}
+                                        <div>
+                                            <h4 className="font-medium mb-2">Company Information</h4>
+                                            <div className="space-y-2">
+                                                <Input
+                                                    value={lead.companyInfo?.name || ''}
+                                                    onChange={(e) => {
+                                                        const updatedLeads = [...leads]
+                                                        if (!updatedLeads[actualIndex].companyInfo) {
+                                                            updatedLeads[actualIndex].companyInfo = {}
+                                                        }
+                                                        updatedLeads[actualIndex].companyInfo.name = e.target.value
+                                                        setEditedContent(JSON.stringify(updatedLeads, null, 2))
+                                                    }}
+                                                    placeholder="Company Name"
+                                                />
+                                                <Input
+                                                    value={lead.companyInfo?.industry || ''}
+                                                    onChange={(e) => {
+                                                        const updatedLeads = [...leads]
+                                                        if (!updatedLeads[actualIndex].companyInfo) {
+                                                            updatedLeads[actualIndex].companyInfo = {}
+                                                        }
+                                                        updatedLeads[actualIndex].companyInfo.industry = e.target.value
+                                                        setEditedContent(JSON.stringify(updatedLeads, null, 2))
+                                                    }}
+                                                    placeholder="Industry"
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    {/* Lead Details */}
-                                    <div>
-                                        <h4 className="font-medium mb-2">Lead Details</h4>
-                                        <div className="space-y-2">
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <label className="text-sm font-medium">Pain Points</label>
-                                                    <div className="flex flex-wrap gap-2 mb-2">
-                                                        {lead.leadDetails?.painPoints?.map((point: string, i: number) => (
-                                                            <Badge key={i} variant="secondary" className="group">
-                                                                {point}
-                                                                <button
-                                                                    className="ml-2 opacity-0 group-hover:opacity-100"
-                                                                    onClick={() => {
-                                                                        const updatedLeads = [...leads]
-                                                                        updatedLeads[index].leadDetails.painPoints.splice(i, 1)
-                                                                        setEditedContent(JSON.stringify(updatedLeads, null, 2))
-                                                                    }}
-                                                                >
-                                                                    ×
-                                                                </button>
-                                                            </Badge>
-                                                        ))}
+                                        {/* Lead Details */}
+                                        <div>
+                                            <h4 className="font-medium mb-2">Lead Details</h4>
+                                            <div className="space-y-2">
+                                                <div className="space-y-4">
+                                                    <div>
+                                                        <label className="text-sm font-medium">Pain Points</label>
+                                                        <div className="flex flex-wrap gap-2 mb-2">
+                                                            {lead.leadDetails?.painPoints?.map((point: string, i: number) => (
+                                                                <Badge key={i} variant="secondary" className="group">
+                                                                    {point}
+                                                                    <button
+                                                                        className="ml-2 opacity-0 group-hover:opacity-100"
+                                                                        onClick={() => {
+                                                                            const updatedLeads = [...leads]
+                                                                            updatedLeads[actualIndex].leadDetails.painPoints.splice(i, 1)
+                                                                            setEditedContent(JSON.stringify(updatedLeads, null, 2))
+                                                                        }}
+                                                                    >
+                                                                        ×
+                                                                    </button>
+                                                                </Badge>
+                                                            ))}
+                                                        </div>
+                                                        <Input
+                                                            placeholder="Add pain point"
+                                                            onKeyDown={(e) => {
+                                                                if (e.key === 'Enter' && e.currentTarget.value) {
+                                                                    const updatedLeads = [...leads]
+                                                                    if (!updatedLeads[actualIndex].leadDetails) {
+                                                                        updatedLeads[actualIndex].leadDetails = {}
+                                                                    }
+                                                                    if (!updatedLeads[actualIndex].leadDetails.painPoints) {
+                                                                        updatedLeads[actualIndex].leadDetails.painPoints = []
+                                                                    }
+                                                                    updatedLeads[actualIndex].leadDetails.painPoints.push(e.currentTarget.value)
+                                                                    setEditedContent(JSON.stringify(updatedLeads, null, 2))
+                                                                    e.currentTarget.value = ''
+                                                                }
+                                                            }}
+                                                        />
                                                     </div>
-                                                    <Input
-                                                        placeholder="Add pain point"
-                                                        onKeyDown={(e) => {
-                                                            if (e.key === 'Enter' && e.currentTarget.value) {
-                                                                const updatedLeads = [...leads]
-                                                                if (!updatedLeads[index].leadDetails) {
-                                                                    updatedLeads[index].leadDetails = {}
-                                                                }
-                                                                if (!updatedLeads[index].leadDetails.painPoints) {
-                                                                    updatedLeads[index].leadDetails.painPoints = []
-                                                                }
-                                                                updatedLeads[index].leadDetails.painPoints.push(e.currentTarget.value)
-                                                                setEditedContent(JSON.stringify(updatedLeads, null, 2))
-                                                                e.currentTarget.value = ''
-                                                            }
-                                                        }}
-                                                    />
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Remove Lead Button */}
-                                    <Button 
-                                        variant="destructive" 
-                                        size="sm"
-                                        onClick={() => {
-                                            const updatedLeads = [...leads]
-                                            updatedLeads.splice(index, 1)
-                                            setEditedContent(JSON.stringify(updatedLeads, null, 2))
-                                        }}
-                                    >
-                                        Remove Lead
-                                    </Button>
-                                </div>
-                            </AccordionContent>
-                        </AccordionItem>
-                    ))}
+                                        {/* Remove Lead Button */}
+                                        <Button 
+                                            variant="destructive" 
+                                            size="sm"
+                                            onClick={() => {
+                                                const updatedLeads = [...leads]
+                                                updatedLeads.splice(actualIndex, 1)
+                                                setEditedContent(JSON.stringify(updatedLeads, null, 2))
+                                            }}
+                                        >
+                                            Remove Lead
+                                        </Button>
+                                    </div>
+                                </AccordionContent>
+                            </AccordionItem>
+                        )
+                    })}
                 </Accordion>
 
                 {/* Add New Lead Button */}
@@ -489,11 +526,39 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false, initialAt
     if (step.name === 'Generated Content') {
         const results = Array.isArray(parsedContent) ? parsedContent : [];
         
+        // Filter results based on search term
+        const filteredResults = results.filter((result: WorkflowResult) => {
+            if (!searchTerm) return true
+            if (!result?.lead?.contactInfo) return false
+            
+            const searchLower = searchTerm.toLowerCase()
+            const name = result.lead.contactInfo.name?.toLowerCase() || ''
+            const company = result.lead.companyInfo?.name?.toLowerCase() || ''
+            const email = result.lead.contactInfo.email?.toLowerCase() || ''
+            return name.includes(searchLower) || company.includes(searchLower) || email.includes(searchLower)
+        })
+        
         return (
             <div className="space-y-4">
+                {/* Search Bar */}
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                    <Input
+                        placeholder="Search results by lead name, company, or email..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10"
+                    />
+                </div>
+                
+                {/* Results count */}
+                <div className="text-sm text-muted-foreground">
+                    {searchTerm ? `${filteredResults.length} of ${results.length} results` : `${results.length} results`}
+                </div>
+
                 <ScrollArea className="h-[calc(100vh-8rem)]">
                     <Accordion type="single" collapsible className="w-full">
-                        {results.map((result: WorkflowResult, index: number) => {
+                        {filteredResults.map((result: WorkflowResult, index: number) => {
                             // Validate result object structure
                             if (!result?.lead?.contactInfo || !result?.emailContent || !result?.linkedInContent) {
                                 return null;
