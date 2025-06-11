@@ -36,6 +36,8 @@ Please write a cold email that:
 7. Maintains a professional yet engaging tone
 8. Is concise and easy to read
 
+CRITICAL: Do not use any placeholder text, brackets, or generic phrases like "[mention specific impact]", "[your experience]", or "[company name]". Generate specific, concrete content based on the provided lead and profile information. Use actual company names, specific skills, real achievements, and concrete examples. If specific details are not provided, make reasonable professional assumptions based on the industry and role context.
+
 Format the response as a JSON object with these fields:
 {
     "subject": "Compelling subject line here",
@@ -64,6 +66,8 @@ Please write a cold email that:
 8. Maintains a professional, confident yet approachable tone
 9. Is concise and easy to read with a focus on their benefits, not just your capabilities
 
+CRITICAL: Do not use any placeholder text, brackets, or generic phrases like "[specific service]", "[percentage increase]", or "[client name]". Generate specific, concrete content based on the provided lead and profile information. Use actual company names, specific services, real metrics, and concrete examples of past work. If specific details are not provided, make reasonable professional assumptions based on the industry and service context.
+
 Format the response as a JSON object with these fields:
 {
     "subject": "Compelling subject line here",
@@ -91,6 +95,8 @@ Please write a cold email that:
 7. Includes proof points (metrics, growth, notable backers, etc)
 8. Has a strong, specific call to action (e.g., "15-min intro call")
 9. Is concise, confident, and tailored to the investor
+
+CRITICAL: Do not use any placeholder text, brackets, or generic phrases like "[funding amount]", "[growth metric]", or "[investor name]". Generate specific, concrete content based on the provided lead and profile information. Use actual investor names, specific funding amounts, real traction metrics, and concrete examples of achievements. If specific details are not provided, make reasonable assumptions based on typical startup funding scenarios and investor expectations.
 
 Format the response as a JSON object with these fields:
 {
@@ -121,6 +127,8 @@ Please provide:
 - Highlights a key achievement
 - Includes a clear call to action
 
+CRITICAL: Do not use any placeholder text, brackets, or generic phrases like "[specific achievement]", "[company name]", or "[role]". Generate specific, concrete content based on the provided lead and profile information. Use actual names, specific achievements, real skills, and concrete examples. If specific details are not provided, make reasonable professional assumptions based on the industry and role context.
+
 Format the response as a JSON object with these fields:
 {
     "intro": "Connection request here",
@@ -149,6 +157,8 @@ Please provide:
 - Highlights a relevant skill or successful project outcome
 - Includes a clear but soft call to action (like a quick 15-minute chat)
 
+CRITICAL: Do not use any placeholder text, brackets, or generic phrases like "[specific project]", "[percentage improvement]", or "[client type]". Generate specific, concrete content based on the provided lead and profile information. Use actual company names, specific services, real metrics, and concrete examples of past work. If specific details are not provided, make reasonable professional assumptions based on the industry and service context.
+
 Format the response as a JSON object with these fields:
 {
     "intro": "Connection request here",
@@ -176,6 +186,8 @@ Please provide:
 - States the startup's vision and traction
 - Explains why the investor is a great fit
 - Includes a clear, non-pushy call to action (e.g., "Would love to share more if you're open!")
+
+CRITICAL: Do not use any placeholder text, brackets, or generic phrases like "[startup name]", "[traction metric]", or "[investment focus]". Generate specific, concrete content based on the provided lead and profile information. Use actual investor names, specific portfolio companies, real traction metrics, and concrete examples of achievements. If specific details are not provided, make reasonable assumptions based on typical startup funding scenarios and investor interests.
 
 Format the response as a JSON object with these fields:
 {
@@ -208,7 +220,7 @@ export const writeEmail = async (
         
         try {
             content = JSON.parse(cleanResult) as EmailContent;
-        } catch (error) {
+        } catch {
             console.error('Failed to parse email content:', cleanResult);
             throw new Error('Invalid email content generated');
         }
@@ -251,7 +263,7 @@ export const writeLinkedInMessage = async (
         
         try {
             content = JSON.parse(cleanResult) as LinkedInContent;
-        } catch (error) {
+        } catch {
             console.error('Failed to parse LinkedIn content:', cleanResult);
             throw new Error('Invalid LinkedIn content generated');
         }

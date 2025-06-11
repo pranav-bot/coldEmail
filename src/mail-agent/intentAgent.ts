@@ -15,6 +15,8 @@ const intentAgent = async (userPrompt: string, template: Template, model: Langua
     5. Emphasizes their unique value proposition
     6. Includes any implicit but important details
 
+    CRITICAL: Do not use any placeholder text, brackets, or generic phrases like "[mention specific impact]" or "[your expertise]". Instead, generate specific, concrete content based on the user's prompt. If the user mentions skills, experience, or goals, be specific about how those translate to value for employers. If information is missing, make reasonable professional assumptions based on industry standards and best practices.
+
     Return ONLY the improved intent as a natural, well-structured paragraph. Do not include any explanations, analysis, or additional text - just the enhanced intent statement.
     `;
 
@@ -31,6 +33,8 @@ const intentAgent = async (userPrompt: string, template: Template, model: Langua
     5. Emphasizes the benefits and outcomes for potential clients
     6. Includes relevant portfolio highlights or past success metrics
 
+    CRITICAL: Do not use any placeholder text, brackets, or generic phrases like "[your expertise]" or "[specific results you achieved]". Instead, generate specific, concrete content based on the user's prompt. If the user mentions services, skills, or client work, be specific about measurable outcomes and business impact. If information is missing, make reasonable professional assumptions based on industry standards and typical freelancer capabilities.
+
     Return ONLY the improved intent as a natural, well-structured paragraph. Do not include any explanations, analysis, or additional text - just the enhanced intent statement.
     `;
 
@@ -46,6 +50,8 @@ const intentAgent = async (userPrompt: string, template: Template, model: Langua
     4. Structures their thoughts in a clear, compelling, and professional manner
     5. Emphasizes the unique value proposition and why now is the right time
     6. Includes any implicit but important details for investors
+
+    CRITICAL: Do not use any placeholder text, brackets, or generic phrases like "[funding amount]" or "[your startup's unique advantage]". Instead, generate specific, concrete content based on the user's prompt. If the user mentions traction, market size, or funding needs, be specific about numbers, growth metrics, and market opportunities. If information is missing, make reasonable assumptions based on typical startup funding scenarios and investor expectations.
 
     Return ONLY the improved intent as a natural, well-structured paragraph. Do not include any explanations, analysis, or additional text - just the enhanced intent statement.
     `;
