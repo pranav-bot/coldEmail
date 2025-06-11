@@ -7,7 +7,7 @@ const intentAgent = async (userPrompt: string, template: Template, model: Langua
 
     Original User Prompt: "${userPrompt}"
 
-    Please analyze the user's intent and provide an enhanced version that:
+    Analyze the user's intent and provide ONLY an enhanced version that:
     1. Maintains their core goals and preferences
     2. Adds relevant professional context and motivation
     3. Clarifies any ambiguous requirements
@@ -15,8 +15,7 @@ const intentAgent = async (userPrompt: string, template: Template, model: Langua
     5. Emphasizes their unique value proposition
     6. Includes any implicit but important details
 
-    Focus on understanding their true intent and enhancing it, rather than just extracting information.
-    Your response should be a natural, well-structured paragraph that captures their intent in a more compelling way.
+    Return ONLY the improved intent as a natural, well-structured paragraph. Do not include any explanations, analysis, or additional text - just the enhanced intent statement.
     `;
 
     const freelancePrompt = `
@@ -24,7 +23,7 @@ const intentAgent = async (userPrompt: string, template: Template, model: Langua
 
     Original User Prompt: "${userPrompt}"
 
-    Please analyze the user's intent and provide an enhanced version that:
+    Analyze the user's intent and provide ONLY an enhanced version that:
     1. Maintains their core freelance service offerings and goals
     2. Adds relevant expertise and unique value proposition
     3. Clarifies their target client profile and industry niche
@@ -32,8 +31,7 @@ const intentAgent = async (userPrompt: string, template: Template, model: Langua
     5. Emphasizes the benefits and outcomes for potential clients
     6. Includes relevant portfolio highlights or past success metrics
 
-    Focus on understanding their true intent and enhancing it, rather than just extracting information.
-    Your response should be a natural, well-structured paragraph that captures their freelance service offering in a compelling way.
+    Return ONLY the improved intent as a natural, well-structured paragraph. Do not include any explanations, analysis, or additional text - just the enhanced intent statement.
     `;
 
     const fundingPrompt = `
@@ -41,7 +39,7 @@ const intentAgent = async (userPrompt: string, template: Template, model: Langua
 
     Original User Prompt: "${userPrompt}"
 
-    Please analyze the founder's intent and provide an enhanced version that:
+    Analyze the founder's intent and provide ONLY an enhanced version that:
     1. Maintains their core vision, funding goals, and startup story
     2. Adds relevant traction, market opportunity, and team strengths
     3. Clarifies the funding ask, use of funds, and investor fit
@@ -49,8 +47,7 @@ const intentAgent = async (userPrompt: string, template: Template, model: Langua
     5. Emphasizes the unique value proposition and why now is the right time
     6. Includes any implicit but important details for investors
 
-    Focus on understanding their true intent and enhancing it, rather than just extracting information.
-    Your response should be a natural, well-structured paragraph that captures their funding story in a compelling way.
+    Return ONLY the improved intent as a natural, well-structured paragraph. Do not include any explanations, analysis, or additional text - just the enhanced intent statement.
     `;
 
     let prompt;
