@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Mail, Briefcase, Code } from "lucide-react"
+import { ArrowRight, Mail, Briefcase, Code, Rocket } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { auth } from "@clerk/nextjs/server"
@@ -47,10 +47,10 @@ export default async function Home() {
         <section className="container max-w-6xl mx-auto px-4 py-24 space-y-8 text-center md:py-32">
           <div className="space-y-6 max-w-[700px] mx-auto">
             <h1 className="text-4xl font-bold sm:text-5xl md:text-6xl">
-              Find Your Next Job or Client – with One Smart Email
+              Find Your Next Opportunity – with One Smart Email
             </h1>
             <p className="text-xl text-muted-foreground mx-auto max-w-[600px]">
-              Whether you&apos;re seeking internships, full-time roles, or freelance gigs — our AI agent crafts cold emails that open doors.
+              Whether you&apos;re seeking jobs, clients, or investors — our AI agent crafts cold emails that open doors for job seekers, freelancers, and early-stage founders.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               {userId ? (
@@ -88,10 +88,10 @@ export default async function Home() {
           <div className="container max-w-6xl mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-3xl font-bold">Who It&apos;s For</h2>
-              <p className="text-muted-foreground mt-2">Designed for professionals at every stage of their career journey</p>
+              <p className="text-muted-foreground mt-2">Designed for professionals and entrepreneurs at every stage of their journey</p>
             </div>
             
-            <div className="grid md:grid-cols-2 gap-8">
+            <div className="grid md:grid-cols-3 gap-8">
               {/* Job Seekers Card */}
               <div className="bg-card p-8 rounded-lg border">
                 <div className="flex items-center gap-3 mb-6">
@@ -148,7 +148,38 @@ export default async function Home() {
                 {!userId && (
                   <Link href="/sign-up">
                     <Button className="w-full">
-                      Grow Your Freelance Business <ArrowRight className="ml-2 h-4 w-4" />
+                      Grow Your Business <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  </Link>
+                )}
+              </div>
+
+              {/* Early Stage Founders Card */}
+              <div className="bg-card p-8 rounded-lg border">
+                <div className="flex items-center gap-3 mb-6">
+                  <div className="p-2 rounded-full bg-primary/10">
+                    <Rocket className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-xl font-semibold">Early Stage Founders</h3>
+                </div>
+                <ul className="space-y-4 mb-8">
+                  <li className="flex items-start gap-3">
+                    <span className="text-primary text-lg">•</span>
+                    <span>Reach investors and secure funding rounds</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-primary text-lg">•</span>
+                    <span>Connect with advisors and industry experts</span>
+                  </li>
+                  <li className="flex items-start gap-3">
+                    <span className="text-primary text-lg">•</span>
+                    <span>Build strategic partnerships and collaborations</span>
+                  </li>
+                </ul>
+                {!userId && (
+                  <Link href="/sign-up">
+                    <Button className="w-full">
+                      Raise Your Round <ArrowRight className="ml-2 h-4 w-4" />
                     </Button>
                   </Link>
                 )}
