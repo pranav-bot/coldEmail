@@ -160,24 +160,8 @@ model Workflow {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   user        User     @relation(fields: [userId], references: [id])
-  steps       WorkflowStep[] // Relation to workflow steps
 
   @@index([userId])
-}
-
-model WorkflowStep {
-  id          String   @id @default(cuid())
-  workflowId  String
-  stepName    String   // Step name: 'Enhanced Intent', 'Profile Analysis', etc.
-  stepContent String   // Content for this step
-  stepIndex   Int      // Order of step execution
-  status      String   // 'pending', 'editing', 'complete'
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  workflow    Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
-
-  @@unique([workflowId, stepName])
-  @@index([workflowId])
 }
 
 enum Role {

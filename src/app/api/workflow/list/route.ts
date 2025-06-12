@@ -16,13 +16,6 @@ export async function GET() {
             where: {
                 userId
             },
-            include: {
-                steps: {
-                    orderBy: {
-                        stepIndex: 'asc'
-                    }
-                }
-            },
             orderBy: {
                 createdAt: 'desc'
             }
