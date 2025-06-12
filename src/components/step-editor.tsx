@@ -69,22 +69,62 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false, initialAt
         }
     }
 
-    const ContinueButton = () => (
-        <Button 
-            onClick={() => handleSubmit(editedContent)} 
-            className="w-full"
-            disabled={isLoading || isParentLoading}
-        >
-            {(isLoading || isParentLoading) ? (
-                <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
-                </>
-            ) : (
-                'Continue to Next Step'
-            )}
-        </Button>
-    )
+    const ContinueButton = () => {
+        const isContentEmpty = !editedContent.trim()
+        
+        return (
+            <div className="space-y-2">
+                {isContentEmpty && (
+                    <div className="text-sm text-red-500 font-medium">
+                        Please enter content before continuing to the next step
+                    </div>
+                )}
+                <Button 
+                    onClick={() => handleSubmit(editedContent)} 
+                    className="w-full"
+                    disabled={isLoading || isParentLoading || isContentEmpty}
+                >
+                    {(isLoading || isParentLoading) ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing...
+                        </>
+                    ) : (
+                        'Continue to Next Step'
+                    )}
+                </Button>
+            </div>
+        )
+    }
+
+    const SaveButton = () => {
+        const isContentEmpty = !editedContent.trim()
+        
+        return (
+            <div className="space-y-2">
+                {isContentEmpty && (
+                    <div className="text-sm text-red-500 font-medium">
+                        No content to save
+                    </div>
+                )}
+                <Button 
+                    onClick={() => handleSubmit(editedContent)} 
+                    className="w-full"
+                    disabled={isLoading || isParentLoading || isContentEmpty}
+                    variant="outline"
+                >
+                    {(isLoading || isParentLoading) ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Saving...
+                        </>
+                    ) : (
+                        'Save Changes'
+                    )}
+                </Button>
+            </div>
+        )
+    }
 
     // Determine if this is the final step
     const isFinalStep = step.name === 'Generated Content'
@@ -640,7 +680,11 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false, initialAt
                             );
                         })}
                     </Accordion>
+                    <SaveButton />
                 </ScrollArea>
+                
+                {/* Save button for final step */}
+                
             </div>
         );
     }
@@ -687,7 +731,7 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false, initialAt
                                     setIsEditing(false)
                                     handleSubmit(editedContent)
                                 }}
-                                disabled={isLoading || isParentLoading}
+                                disabled={isLoading || isParentLoading || !editedContent.trim()}
                             >
                                 {(isLoading || isParentLoading) ? (
                                     <>
@@ -729,7 +773,7 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false, initialAt
                     placeholder={`Enter ${step.name.toLowerCase()}...`}
                 />
             </div>
-            {!isFinalStep && <ContinueButton />}
+            {isFinalStep ? <SaveButton /> : <ContinueButton />}
         </div>
     )
 }

@@ -36,4 +36,10 @@ export type WorkflowHistory = {
     createdAt: Date;
     enhancedIntent: string;
     status: WorkflowState['status'];
+    steps?: Array<{
+        stepName: string;
+        stepIndex: number;
+        content: string;
+        status: string;
+    }>;
 }

@@ -2,7 +2,10 @@ import { auth } from "@clerk/nextjs/server"
 import { db } from "@/server/db"
 import { NextResponse } from "next/server"
 
-export async function GET() {
+export async function GET(
+    request: Request,
+    { params }: { params: { id: string } }
+) {
     try {
         const { userId } = await auth()
         if (!userId) {
@@ -12,9 +15,10 @@ export async function GET() {
             )
         }
 
-        const workflows = await db.workflow.findMany({
+        const workflow = await db.workflow.findUnique({
             where: {
-                userId
+                id: params.id,
+                userId, // Ensure user owns the workflow
             },
             include: {
                 steps: {
@@ -22,17 +26,21 @@ export async function GET() {
                         stepIndex: 'asc'
                     }
                 }
-            },
-            orderBy: {
-                createdAt: 'desc'
             }
         })
 
-        return NextResponse.json(workflows)
+        if (!workflow) {
+            return NextResponse.json(
+                { error: "Workflow not found" },
+                { status: 404 }
+            )
+        }
+
+        return NextResponse.json(workflow)
     } catch (error) {
-        console.error('Error loading workflows:', error)
+        console.error('Error loading workflow:', error)
         return NextResponse.json(
-            { error: "Failed to load workflows" },
+            { error: "Failed to load workflow" },
             { status: 500 }
         )
     }

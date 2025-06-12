@@ -96,6 +96,11 @@ export async function POST(req: Request) {
                 }
                 break
 
+            case 'Generated Content':
+                // Final step - just return the content as-is for saving
+                content = stepContent
+                break
+
             default:
                 throw new Error('Invalid step')
         }
