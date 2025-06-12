@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Template } from "@/mail-agent/enums"
-import { Loader2, Upload, Plus, ArrowLeft, ArrowRight } from "lucide-react"
+import { Loader2, Upload, Plus, ArrowLeft, ArrowRight, Home } from "lucide-react"
 import type { WorkflowState, WorkflowHistory } from "@/types/workflow"
+import Link from "next/link"
 import { formatDistanceToNow } from "date-fns"
 import {
     Select,
@@ -289,15 +290,27 @@ export function WorkflowClient() {
                     <div className="flex h-full flex-col">
                         <div className="p-4 border-b flex justify-between items-center">
                             <h2 className="text-lg font-semibold">History</h2>
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={handleNewWorkflow}
-                                className="h-8 w-8"
-                            >
-                                <Plus className="h-4 w-4" />
-                                <span className="sr-only">New Workflow</span>
-                            </Button>
+                            <div className="flex gap-1">
+                                <Link href="/">
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-8 w-8"
+                                    >
+                                        <Home className="h-4 w-4" />
+                                        <span className="sr-only">Home</span>
+                                    </Button>
+                                </Link>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={handleNewWorkflow}
+                                    className="h-8 w-8"
+                                >
+                                    <Plus className="h-4 w-4" />
+                                    <span className="sr-only">New Workflow</span>
+                                </Button>
+                            </div>
                         </div>
                         <ScrollArea className="flex-1 h-[calc(100vh-8rem)]">
                             <div className="p-4 space-y-4">
