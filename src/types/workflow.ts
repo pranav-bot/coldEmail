@@ -36,4 +36,5 @@ export type WorkflowHistory = {
     createdAt: Date;
     enhancedIntent: string;
     status: WorkflowState['status'];
+    steps?: any[]; // Database steps
 }

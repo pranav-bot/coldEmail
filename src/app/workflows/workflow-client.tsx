@@ -49,6 +49,51 @@ export function WorkflowClient() {
     const [currentStepIndex, setCurrentStepIndex] = useState(0);
     const [isLoading, setIsLoading] = useState(false);
 
+    // Function to save a workflow step
+    const saveWorkflowStep = async (workflowId: string, stepName: string, stepContent: string, stepIndex: number, status: string) => {
+        try {
+            const response = await fetch('/api/workflow/step/save', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    workflowId,
+                    stepName,
+                    stepContent,
+                    stepIndex,
+                    status
+                })
+            });
+
+            if (!response.ok) {
+                console.error('Failed to save workflow step');
+                return null;
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error saving workflow step:', error);
+            return null;
+        }
+    };
+
+    // Function to load workflow steps
+    const loadWorkflowSteps = async (workflowId: string) => {
+        try {
+            const response = await fetch(`/api/workflow/step/load?workflowId=${workflowId}`);
+            if (!response.ok) {
+                console.error('Failed to load workflow steps');
+                return [];
+            }
+            
+            return await response.json();
+        } catch (error) {
+            console.error('Error loading workflow steps:', error);
+            return [];
+        }
+    };
+
     useEffect(() => {
         const loadWorkflows = async () => {
             try {
@@ -61,7 +106,8 @@ export function WorkflowClient() {
                     title: w.title,
                     createdAt: new Date(w.createdAt),
                     enhancedIntent: w.prompt,
-                    status: 'complete'
+                    status: 'complete',
+                    steps: w.steps || [] // Include steps from database
                 })))
                 
                 // Set workflow count to be one more than the highest existing number
@@ -118,6 +164,12 @@ export function WorkflowClient() {
                 content: JSON.stringify(result.profile),
                 type: selectedTemplate,
                 leadMessage: JSON.stringify(result.leads),
+                steps: steps.map((step, index) => ({
+                    stepName: step.name,
+                    stepContent: step.content,
+                    stepIndex: index,
+                    status: step.status
+                }))
             }
 
             // Save workflow to database
@@ -226,6 +278,17 @@ export function WorkflowClient() {
                     : step
             ))
 
+            // Save the current step to database
+            if (workflowState.id) {
+                await saveWorkflowStep(
+                    workflowState.id,
+                    steps[currentStepIndex].name,
+                    stepContent,
+                    currentStepIndex,
+                    'complete'
+                );
+            }
+
             if (currentStepIndex < steps.length - 1) {
                 setCurrentStepIndex(prev => prev + 1)
                 setSteps(prev => prev.map((step, idx) => 
@@ -233,6 +296,17 @@ export function WorkflowClient() {
                         ? { ...step, status: 'editing', content: stepResult.content }
                         : step
                 ))
+
+                // Save the next step as well if it has content
+                if (workflowState.id && stepResult.content) {
+                    await saveWorkflowStep(
+                        workflowState.id,
+                        steps[currentStepIndex + 1].name,
+                        stepResult.content,
+                        currentStepIndex + 1,
+                        'editing'
+                    );
+                }
             }
         } catch (error) {
             console.error('Step processing error:', error)
@@ -318,13 +392,41 @@ export function WorkflowClient() {
                                     <div
                                         key={workflow.id}
                                         className="border rounded-lg p-3 hover:bg-accent cursor-pointer transition-colors"
-                                        onClick={() => {
-                                            // Set the selected workflow's content
-                                            setWorkflowState(prev => ({
-                                                ...prev,
+                                        onClick={async () => {
+                                            // Load the selected workflow's steps
+                                            const savedSteps = await loadWorkflowSteps(workflow.id);
+                                            
+                                            // Convert saved steps to UI format
+                                            const uiSteps = [
+                                                { name: 'Enhanced Intent', content: '', status: 'pending' as const },
+                                                { name: 'Profile Analysis', content: '', status: 'pending' as const },
+                                                { name: 'Lead Analysis', content: '', status: 'pending' as const },
+                                                { name: 'Generated Content', content: '', status: 'pending' as const }
+                                            ];
+
+                                            // Map saved steps to UI steps
+                                            savedSteps.forEach((savedStep: any) => {
+                                                const stepIndex = uiSteps.findIndex(s => s.name === savedStep.stepName);
+                                                if (stepIndex !== -1) {
+                                                    uiSteps[stepIndex] = {
+                                                        name: savedStep.stepName,
+                                                        content: savedStep.stepContent,
+                                                        status: savedStep.status as 'pending' | 'editing' | 'complete'
+                                                    };
+                                                }
+                                            });
+
+                                            // Set the workflow state and steps
+                                            setSteps(uiSteps);
+                                            setWorkflowState({
                                                 ...workflow,
+                                                id: workflow.id,
                                                 status: 'complete'
-                                            }))
+                                            });
+                                            
+                                            // Find the current step (first incomplete step or last step)
+                                            const currentStep = uiSteps.findIndex(s => s.status !== 'complete');
+                                            setCurrentStepIndex(currentStep === -1 ? uiSteps.length - 1 : currentStep);
                                         }}
                                     >
                                         <div className="flex justify-between items-start mb-2">
