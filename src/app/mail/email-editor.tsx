@@ -18,7 +18,7 @@ type Props = {
   setCcValues: (values: { label: string; value: string }[]) => void;
   to: string[];
   handleSend: (value: string) => void;
-  isSending: boolean;
+  isSending: boolean; // Preserved for future use
   defaultToolBarExpanded: boolean;
 };
 
@@ -31,7 +31,7 @@ const EmailEditor = ({
   setCcValues,
   to,
   handleSend,
-  isSending,
+  isSending: _isSending, // Preserved for future use but prefixed to avoid lint error
   defaultToolBarExpanded,
 }: Props) => {
   const [value, setValue] = useState<string>("");
@@ -96,8 +96,7 @@ const EmailEditor = ({
 
       <div className="prose w-full px-4">
         <EditorContent editor={editor} value={value} />
-      </div>
-      <Separator />
+      </div>      <Separator />
       <div className="flex items-center justify-between px-4 py-3">
         <span className="text-sm">
           Tips: Press{" "}
@@ -106,15 +105,19 @@ const EmailEditor = ({
           </kbd>{" "}
           For AI auto-completiion
         </span>
-        <Button
-          onClick={async () => {
-            editor?.commands?.clearContent();
-            handleSend(value);
-          }}
-          disabled={isSending}
-        >
-          Send
-        </Button>
+        <div className="flex items-center gap-2">
+          <span className="text-sm text-muted-foreground">Coming Soon:</span>
+          <Button
+            disabled
+            onClick={async () => {
+              // Preserved for future use
+              editor?.commands?.clearContent();
+              handleSend(value);
+            }}
+          >
+            Send
+          </Button>
+        </div>
       </div>
     </div>
   );

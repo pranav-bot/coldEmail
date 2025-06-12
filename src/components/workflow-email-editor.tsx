@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { Paperclip, Send, Copy, Download, Edit3, X, Loader2 } from "lucide-react";
+import { Paperclip, Send, Copy, Download, Edit3, X } from "lucide-react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Text } from "@tiptap/extension-text";
@@ -19,7 +19,7 @@ function formatEmailBody(text: string): string {
     if (!text) return '';
     
     // First, handle common email patterns and create logical breaks
-    let formattedText = text
+    const formattedText = text
         // Add breaks after greetings
         .replace(/(Hi [^,]+,)\s*/g, '$1\n\n')
         .replace(/(Hello [^,]+,)\s*/g, '$1\n\n')
@@ -69,7 +69,7 @@ export function WorkflowEmailEditor({
     const [isEditing, setIsEditing] = useState(false);
     const [editableSubject, setEditableSubject] = useState(initialSubject);
     const [attachments, setAttachments] = useState<File[]>(initialAttachments);
-    const [isSending, setIsSending] = useState(false);
+    const [_isSending, _setIsSending] = useState(false); // Preserved for future use
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     // Format the initial body content into proper HTML
@@ -102,19 +102,20 @@ export function WorkflowEmailEditor({
     const handleSend = async () => {
         if (!onSend) return;
         
-        setIsSending(true);
+        // Preserved for future use - currently disabled
+        // _setIsSending(true);
         try {
-            await onSend({
+            onSend({
                 to,
                 subject: editableSubject,
                 body: editableBody,
                 attachments
             });
             toast.success("Email sent successfully!");
-        } catch (error) {
+        } catch {
             toast.error("Failed to send email");
         } finally {
-            setIsSending(false);
+            // _setIsSending(false);
         }
     };
 
@@ -122,7 +123,7 @@ export function WorkflowEmailEditor({
         // Convert HTML back to plain text for copying
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = editableBody;
-        const plainText = tempDiv.textContent || tempDiv.innerText || '';
+        const plainText = tempDiv.textContent ?? tempDiv.innerText ?? '';
         
         const emailContent = `To: ${to}\nSubject: ${editableSubject}\n\n${plainText}`;
         
@@ -130,7 +131,7 @@ export function WorkflowEmailEditor({
             await navigator.clipboard.writeText(emailContent);
             toast.success("Email content copied to clipboard!");
             onCopy?.();
-        } catch (error) {
+        } catch {
             toast.error("Failed to copy to clipboard");
         }
     };
@@ -139,7 +140,7 @@ export function WorkflowEmailEditor({
         // Convert HTML back to plain text for download
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = editableBody;
-        const plainText = tempDiv.textContent || tempDiv.innerText || '';
+        const plainText = tempDiv.textContent ?? tempDiv.innerText ?? '';
         
         const emailContent = `To: ${to}\nSubject: ${editableSubject}\n\n${plainText}`;
         const blob = new Blob([emailContent], { type: 'text/plain' });
@@ -156,7 +157,7 @@ export function WorkflowEmailEditor({
     };
 
     const handleFileAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const files = Array.from(e.target.files || []);
+        const files = Array.from(e.target.files ?? []);
         setAttachments(prev => [...prev, ...files]);
         toast.success(`${files.length} file(s) attached`);
     };
@@ -315,23 +316,17 @@ export function WorkflowEmailEditor({
                         </Button>
                     )}
                     {onSend && (
-                        <Button
-                            onClick={handleSend}
-                            disabled={isSending}
-                            size="sm"
-                        >
-                            {isSending ? (
-                                <>
-                                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                                    Sending...
-                                </>
-                            ) : (
-                                <>
-                                    <Send className="h-3 w-3 mr-1" />
-                                    Send Email
-                                </>
-                            )}
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Coming Soon:</span>
+                            <Button
+                                disabled
+                                onClick={handleSend}
+                                size="sm"
+                            >
+                                <Send className="h-3 w-3 mr-1" />
+                                Send Email
+                            </Button>
+                        </div>
                     )}
                 </div>
             </div>

@@ -5,12 +5,19 @@ import { getAurinkoAuthUrl } from "@/lib/aurinko"
 
 const LinkAccountButton = () => {
     return (
-        <Button onClick={async () => {
-            const authUrl = await getAurinkoAuthUrl('Google')
-            window.location.href = authUrl
-        }}>
-            Link Account
-        </Button>
+        <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground">Coming Soon:</span>
+            <Button 
+                disabled 
+                onClick={async () => {
+                    // Preserved for future use
+                    const authUrl = await getAurinkoAuthUrl('Google')
+                    window.location.href = authUrl
+                }}
+            >
+                Link Account
+            </Button>
+        </div>
     )
 }
 
