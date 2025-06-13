@@ -663,15 +663,8 @@ export function StepEditor({ step, onSubmit, isHistoricalView = false, initialAt
                                             {/* LinkedIn Content */}
                                             <div>
                                                 <h4 className="font-medium mb-2">LinkedIn Message</h4>
-                                                <div className="space-y-2">
-                                                    <div className="bg-muted p-3 rounded">
-                                                        <p className="font-medium">Connection Request:</p>
-                                                        <p>{linkedInContent.intro}</p>
-                                                    </div>
-                                                    <div className="bg-muted p-3 rounded">
-                                                        <p className="font-medium">Follow-up Message:</p>
-                                                        <p className="whitespace-pre-wrap">{linkedInContent.message}</p>
-                                                    </div>
+                                                <div className="bg-muted p-3 rounded">
+                                                    <p className="whitespace-pre-wrap">{linkedInContent.message}</p>
                                                 </div>
                                             </div>
                                         </div>

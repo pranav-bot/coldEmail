@@ -68,13 +68,10 @@ leads.then(async (leads) => {
                     console.log("Body:", emailContent.body);
                 } catch (error) {
                     console.error(`Error generating email for Lead ${i + 1}:`, error);
-                }
-
-                // Generate LinkedIn message content
+                }                // Generate LinkedIn message content
                 try {
                     const linkedInContent = await writeLinkedInMessage(lead, profile as JobProfile, template, gemini.chat('gemini-2.0-flash'));
                     console.log("\nGenerated LinkedIn Message Content:");
-                    console.log("Intro:", linkedInContent.intro);
                     console.log("Message:", linkedInContent.message);
                     console.log("To:", linkedInContent.to);
                 } catch (error) {

@@ -11,7 +11,6 @@ type EmailContent = {
 };
 
 type LinkedInContent = {
-    intro: string;
     message: string;
     to: string;
 };
@@ -108,7 +107,7 @@ Format the response as a JSON object with these fields:
 
 // LinkedIn prompts
 const getJobSearchLinkedInPrompt = (lead: Lead, profile: JobProfile) => `
-You are an expert LinkedIn outreach strategist for job seekers. Your task is to write a concise, engaging LinkedIn message sequence to connect with the hiring manager or recruiter.
+You are an expert LinkedIn outreach strategist for job seekers. Your task is to write a concise, engaging LinkedIn cold message to send to a hiring manager or recruiter.
 
 Lead LinkedIn:
 ${lead.contactInfo.linkedin ?? ""}
@@ -119,26 +118,25 @@ ${JSON.stringify(lead, null, 2)}
 Candidate Profile:
 ${JSON.stringify(profile, null, 2)}
 
-Please provide:
-1. A short connection request introduction (no more than 300 characters).
-2. A follow-up LinkedIn message (no more than 500 characters) that:
-- References the connection
-- Shows understanding of their needs
-- Highlights a key achievement
-- Includes a clear call to action
+Please write a LinkedIn cold message (max 500 characters) that:
+- Opens with a personalized hook based on their company/role
+- Shows understanding of their needs and challenges
+- Highlights a key relevant achievement or skill
+- Demonstrates how you can add value to their team
+- Includes a clear, professional call to action
+- Is concise and engaging without being pushy
 
 CRITICAL: Do not use any placeholder text, brackets, or generic phrases like "[specific achievement]", "[company name]", or "[role]". Generate specific, concrete content based on the provided lead and profile information. Use actual names, specific achievements, real skills, and concrete examples. If specific details are not provided, make reasonable professional assumptions based on the industry and role context.
 
 Format the response as a JSON object with these fields:
 {
-    "intro": "Connection request here",
-    "message": "Follow-up message here",
+    "message": "LinkedIn cold message here",
     "to": ""
 }
 `;
 
 const getFreelanceLinkedInPrompt = (lead: Lead, profile: FreelanceProfile) => `
-You are an expert LinkedIn outreach strategist for freelancers. Your task is to write a concise, engaging LinkedIn message sequence to connect with a potential client.
+You are an expert LinkedIn outreach strategist for freelancers. Your task is to write a concise, engaging LinkedIn cold message to send to a potential client.
 
 Lead LinkedIn:
 ${lead.contactInfo.linkedin ?? ""}
@@ -149,26 +147,25 @@ ${JSON.stringify(lead, null, 2)}
 Freelancer Profile:
 ${JSON.stringify(profile, null, 2)}
 
-Please provide:
-1. A short connection request introduction (no more than 300 characters).
-2. A follow-up LinkedIn message (no more than 500 characters) that:
-- References the connection
-- Demonstrates understanding of their specific needs or goals
+Please write a LinkedIn cold message (max 500 characters) that:
+- Opens with a personalized hook based on their industry/role/challenges
+- Demonstrates understanding of their business needs or opportunities
 - Highlights a relevant skill or successful project outcome
+- Shows how your services can solve their problems or achieve their goals
 - Includes a clear but soft call to action (like a quick 15-minute chat)
+- Is professional, confident yet approachable
 
 CRITICAL: Do not use any placeholder text, brackets, or generic phrases like "[specific project]", "[percentage improvement]", or "[client type]". Generate specific, concrete content based on the provided lead and profile information. Use actual company names, specific services, real metrics, and concrete examples of past work. If specific details are not provided, make reasonable professional assumptions based on the industry and service context.
 
 Format the response as a JSON object with these fields:
 {
-    "intro": "Connection request here",
-    "message": "Follow-up message here",
+    "message": "LinkedIn cold message here",
     "to": ""
 }
 `;
 
 const getFundingLinkedInPrompt = (lead: Lead, profile: FundingProfile) => `
-You are an expert LinkedIn outreach strategist for startup founders. Your task is to write a concise, engaging LinkedIn message sequence to connect with a potential investor.
+You are an expert LinkedIn outreach strategist for startup founders. Your task is to write a concise, engaging LinkedIn cold message to send to a potential investor.
 
 Lead LinkedIn:
 ${lead.contactInfo.linkedin ?? ""}
@@ -179,20 +176,19 @@ ${JSON.stringify(lead, null, 2)}
 Startup Funding Profile:
 ${JSON.stringify(profile, null, 2)}
 
-Please provide:
-1. A short connection request introduction (max 300 characters) that references the investor's interests or portfolio
-2. A follow-up LinkedIn message (max 500 characters) that:
-- References the connection
-- States the startup's vision and traction
-- Explains why the investor is a great fit
+Please write a LinkedIn cold message (max 500 characters) that:
+- Opens with a personalized hook that references the investor's interests or portfolio
+- States the startup's vision and key traction points
+- Explains why this investor is a great fit for the opportunity
+- Highlights what makes the startup unique and timely
 - Includes a clear, non-pushy call to action (e.g., "Would love to share more if you're open!")
+- Is confident and professional without being overly salesy
 
 CRITICAL: Do not use any placeholder text, brackets, or generic phrases like "[startup name]", "[traction metric]", or "[investment focus]". Generate specific, concrete content based on the provided lead and profile information. Use actual investor names, specific portfolio companies, real traction metrics, and concrete examples of achievements. If specific details are not provided, make reasonable assumptions based on typical startup funding scenarios and investor interests.
 
 Format the response as a JSON object with these fields:
 {
-    "intro": "Connection request here",
-    "message": "Follow-up message here",
+    "message": "LinkedIn cold message here",
     "to": ""
 }
 `;
@@ -269,7 +265,7 @@ export const writeLinkedInMessage = async (
         }
 
         // Ensure required fields are present
-        if (!content.intro || !content.message) {
+        if (!content.message) {
             throw new Error('Missing required fields in LinkedIn content');
         }
 

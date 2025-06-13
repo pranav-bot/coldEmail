@@ -9,7 +9,6 @@ export type WorkflowResult = {
         to: string;
     };
     linkedInContent: {
-        intro: string;
         message: string;
         to: string;
     };
