@@ -115,7 +115,7 @@ export function WorkflowDiagram({ userId }: WorkflowDiagramProps) {
               
               {/* Arrow */}
               {index < steps.length - 1 && (
-                <div className="hidden md:block absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
+                <div className="hidden md:block absolute top-1/2 -right-6.5 transform -translate-y-1/2 z-10">
                   <ArrowRight className="w-6 h-6 text-primary" />
                 </div>
               )}
